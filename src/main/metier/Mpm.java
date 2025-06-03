@@ -1,8 +1,11 @@
+package main.metier;
 import java.io.File; // Ou FileInputStream si Decomposeur le nécessite
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
+import main.metier.Tache;
 
 public class Mpm 
 {

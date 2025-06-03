@@ -1,3 +1,10 @@
+package main;
+
+import main.metier.Mpm;
+import main.ihm.FrameMpm;
+import main.metier.Tache;
+import main.ihm.BtnPanel;
+import main.ihm.MPMGrapheAuto;
 
 import java.util.ArrayList;
 
