@@ -3,11 +3,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 
-import main.metier.Mpm;
-import main.ihm.FrameMpm;
-import main.metier.Tache;
-import main.ihm.BtnPanel;
-import main.ihm.MPMGrapheAuto;
 
 public class BtnPanel extends JPanel implements ActionListener {
     private JButton btnTot;

@@ -2,11 +2,7 @@ package main.ihm;
 import java.awt.*;
 import javax.swing.*;
 
-import main.metier.Mpm;
 import main.Controleur;
-import main.metier.Tache;
-import main.ihm.BtnPanel;
-import main.ihm.MPMGrapheAuto;
 
 public class FrameMpm extends JFrame {
     private Controleur ctrl;
