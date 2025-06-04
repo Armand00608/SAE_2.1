@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import javax.swing.*;
-
-import main.metier.Tache;
 import main.Controleur;
+import main.metier.Tache;
 
 /**
  * Cette classe représente un graphe MPM affiché avec Swing,
@@ -179,9 +178,12 @@ public class MPMGrapheAuto extends JPanel
             int x2 = to.x;
             int y2 = to.y + boxSize / 2;
 
+			g2.setColor(Color.BLUE);
             g2.drawLine(x1, y1, x2, y2);
+			g2.setColor(new Color(201, 87, 30));
             g2.drawString(String.valueOf(arc.poids), (x1 + x2) / 2, (y1 + y2) / 2 - 5);
             drawArrowHead(g2, x1, y1, x2, y2);
+			g2.setColor(Color.BLACK);
         }
 
         for (Noeud n : noeuds)
@@ -193,8 +195,11 @@ public class MPMGrapheAuto extends JPanel
             FontMetrics fm = g2.getFontMetrics();
             int textWidth = fm.stringWidth(n.nom);
             g2.drawString(n.nom, n.x + (boxSize - textWidth) / 2, n.y + 20);
+			g2.setColor(new Color(30, 189, 120));
             g2.drawString(String.valueOf(n.tot), n.x + 15, n.y + boxSize - 10);
+			g2.setColor(Color.RED);
             g2.drawString(String.valueOf(n.tard), n.x + boxSize - 25, n.y + boxSize - 10);
+			g2.setColor(Color.BLACK);
         }
     }
 
@@ -225,7 +230,9 @@ public class MPMGrapheAuto extends JPanel
             double rho = theta + (j == 0 ? phi : -phi);
             int x = (int) (x2 - barb * Math.cos(rho));
             int y = (int) (y2 - barb * Math.sin(rho));
+			g2.setColor(Color.BLUE);
             g2.drawLine(x2, y2, x, y);
+
         }
     }
 }

@@ -3,7 +3,6 @@ import java.awt.*;
 import javax.swing.*;
 
 import main.Controleur;
-
 public class FrameMpm extends JFrame {
     private Controleur ctrl;
 
@@ -19,7 +18,11 @@ public class FrameMpm extends JFrame {
         this.setSize(1000, 700);
         this.setLayout(new BorderLayout());
 
-        this.graphPanel = new MPMGrapheAuto(ctrl);
+		JMenuBar menubMaBarre = new BarreMenu();
+		this.setJMenuBar( menubMaBarre );
+
+
+		this.graphPanel = new MPMGrapheAuto(ctrl);
         this.add(this.graphPanel, BorderLayout.CENTER);
 
 		 this.btnPanel = new BtnPanel();

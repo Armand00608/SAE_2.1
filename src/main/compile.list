@@ -4,3 +4,4 @@
 ./metier/Mpm.java
 ./metier/Tache.java
 ./ihm/MPMGrapheAuto.java
+./ihm/BarreMenu.java
