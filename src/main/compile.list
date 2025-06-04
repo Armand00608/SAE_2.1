@@ -7,3 +7,4 @@
 ./metier/Tache.java
 ./ihm/MPMGrapheAuto.java
 ./ihm/BarreMenu.java
+./metier/CheminCritique.java

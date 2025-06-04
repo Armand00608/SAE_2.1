@@ -2,6 +2,7 @@ package main;
 
 import java.util.ArrayList;
 import main.ihm.FrameMpm;
+import main.metier.CheminCritique;
 import main.metier.Mpm;
 import main.metier.Tache;
 
@@ -24,4 +25,9 @@ public class Controleur
        Controleur ctrl = new Controleur();
        System.out.println(ctrl.metier);
     }
+
+	public ArrayList<CheminCritique> getCheminCritiques() 
+	{
+		return this.metier.getCheminsCritiques();
+	}
 }

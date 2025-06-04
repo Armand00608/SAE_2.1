@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Stack;
 
 
 public class Mpm 
@@ -11,6 +12,19 @@ public class Mpm
 	// Liste de toutes les tâches du projet
 	private ArrayList<Tache> taches = new ArrayList<Tache>();
 	private String dateDebut;
+
+    private ArrayList<CheminCritique> cheminsCritiques = new ArrayList<>();
+
+	private static class EtatExploration {
+        Tache tacheActuelle;
+        ArrayList<Tache> cheminJusquaIci;
+
+        EtatExploration(Tache tacheActuelle, ArrayList<Tache> cheminJusquaIci) {
+            this.tacheActuelle = tacheActuelle;
+            this.cheminJusquaIci = cheminJusquaIci;
+        }
+    }
+
 
 	// Constructeur : charge le fichier et initialise les tâches
 	public Mpm(String nomFichier, String dateDebut) 
@@ -88,7 +102,8 @@ public class Mpm
 			}
 
 			// Calculer les dates au plus tôt et au plus tard
-			calculerDates();
+			this.calculerDates();
+			this.creerCheminCritique();
 
 		} 
 		catch (Exception e) 
@@ -96,6 +111,72 @@ public class Mpm
 			System.out.println("Erreur lecture fichier : " + e.getMessage());
 			// e.printStackTrace();
 		}
+	}
+	public ArrayList<CheminCritique> getCheminsCritiques() 
+	{
+        return this.cheminsCritiques;
+    }
+
+	private void creerCheminCritique() 
+	{ 
+		this.cheminsCritiques.clear();
+		Tache tacheDebut = chercherTacheParNom("Debut");
+	
+		if (tacheDebut == null || !tacheDebut.estCritique()) {
+			return;
+		}
+	
+		// Notre pile d'états à explorer
+		Stack<EtatExploration> pile = new Stack<>();
+	
+		// État initial : commencer à la tâche "Debut".
+		// Le chemin pour y arriver contient uniquement "Debut" elle-même.
+		ArrayList<Tache> cheminInitial = new ArrayList<>();
+		cheminInitial.add(tacheDebut);
+		pile.push(new EtatExploration(tacheDebut, cheminInitial)); // Ajoute l'état initial à la pile
+	
+		while (!pile.isEmpty()) {
+			// Récupérer et retirer le dernier état ajouté à la pile (LIFO)
+			EtatExploration etatCourant = pile.pop();
+			Tache tacheActuelle = etatCourant.tacheActuelle;
+			ArrayList<Tache> cheminActuel = etatCourant.cheminJusquaIci;
+	
+			// Si la tâche actuelle est "Fin", nous avons trouvé un chemin critique complet
+			if (tacheActuelle.getNom().equals("Fin")) 
+			{
+				CheminCritique cp = new CheminCritique();
+				for (Tache t : cheminActuel) 
+				{
+					cp.ajouterTache(t);
+				}
+				cp.setDureeTotale(tacheActuelle.getDatePlusTot());
+				this.cheminsCritiques.add(cp);
+			} 
+			else 
+			{
+				// Sinon, explorer les successeurs critiques
+				List<Tache> succCritiques  = new ArrayList<>();
+				for (Tache successeur : tacheActuelle.getSuivants()) 
+				{
+					if (successeur.estCritique()) 
+					{
+						succCritiques .add(successeur);
+					}
+				}
+	
+				// On ajoute les successeurs dans l'ordre inverse pour avoir un traitement DFS "naturel".
+				for (int i = succCritiques .size() - 1; i >= 0; i--) 
+				{
+					Tache successeur = succCritiques .get(i);
+	
+					ArrayList<Tache> prochainChemin = new ArrayList<>(cheminActuel);
+					prochainChemin.add(successeur);
+	
+					pile.push(new EtatExploration(successeur, prochainChemin));
+				}
+			}
+		}
+		System.out.println(this.cheminsCritiques);
 	}
 
 	// Chercher une tâche dans la liste à partir de son nom

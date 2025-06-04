@@ -25,7 +25,7 @@ public class FrameMpm extends JFrame {
 		this.graphPanel = new MPMGrapheAuto(ctrl);
         this.add(this.graphPanel, BorderLayout.CENTER);
 
-		 this.btnPanel = new BtnPanel();
+		 this.btnPanel = new BtnPanel(this.graphPanel);
         this.add(this.btnPanel, BorderLayout.SOUTH);
 
         this.setVisible(true);

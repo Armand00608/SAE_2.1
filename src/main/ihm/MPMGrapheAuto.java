@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.*;
 import main.Controleur;
 import main.metier.Tache;
+import main.metier.CheminCritique;
 
 /**
  * Cette classe représente un graphe MPM affiché avec Swing,
@@ -15,6 +16,9 @@ import main.metier.Tache;
 public class MPMGrapheAuto extends JPanel
 {
 
+    private boolean cheminActif = false;
+
+    private ArrayList<CheminCritique> cheminsCritiques = new ArrayList<>();
     /**
      * Représente un nœud du graphe.
      */
@@ -24,17 +28,21 @@ public class MPMGrapheAuto extends JPanel
         int tot, tard;
         int x, y;
 		int col;
+        boolean estChemin = false;
 
-        Noeud(String nom, int tot, int tard, int col)
+        Noeud(String nom, int tot, int tard, int col, boolean estChemin)
         {
             this.nom = nom;
             this.tot = tot;
             this.tard = tard;
 			this.col = col;
+            this.estChemin = estChemin;
         }
 
 		public int getCol()    {return col;}
 		public String getNom() {return nom;}
+        public boolean getEstChemin() {return estChemin;}
+        public void setEstChemin(boolean estChemin) {this.estChemin = estChemin;}
     }
 
     /**
@@ -66,6 +74,7 @@ public class MPMGrapheAuto extends JPanel
     public MPMGrapheAuto(Controleur ctrl)
     {
         this.ctrl = ctrl;
+        this.cheminsCritiques = this.ctrl.getCheminCritiques();
         initialiserNoeudsArcs();
         creerGraphe();
     }
@@ -106,7 +115,18 @@ public class MPMGrapheAuto extends JPanel
 
 		for (Tache t : taches)
         {
-			noeuds.add(new Noeud(t.getNom(), t.getDatePlusTot(), t.getDatePlusTard(), dicTaches.get(t.getNom())));
+            Noeud n = new Noeud(t.getNom(), t.getDatePlusTot(), t.getDatePlusTard(), dicTaches.get(t.getNom()), false);
+			noeuds.add(n);
+            for (CheminCritique ch : this.cheminsCritiques) 
+            {
+                for (Tache tacheCh : ch.getTachesCritiques())
+                {
+                    if (tacheCh.getNom().equals(t.getNom()))
+                    {
+                        n.setEstChemin(true);
+                    }
+                }
+            }
 
 			for (Tache tachePrc : t.getPrecedents())
 			{
@@ -143,8 +163,8 @@ public class MPMGrapheAuto extends JPanel
 			int col = n.col;
 			int ligne = compteurLignes.get(col);
 
-			n.x = startX + col * distX;
-			n.y = startY + ligne * distY;
+			n.x = startX + (col * distX);
+			n.y = startY + (ligne * distY);
 
 			compteurLignes.set(col, ligne + 1); // mettre à jour le compteur
 		}
@@ -188,6 +208,12 @@ public class MPMGrapheAuto extends JPanel
 
         for (Noeud n : noeuds)
         {
+            if (n.estChemin && this.cheminActif)
+            {
+                g2.setColor(Color.GREEN);
+                g2.fillRect(n.x, n.y, boxSize, boxSize);
+            }
+			g2.setColor(Color.BLACK);
             g2.drawRect(n.x, n.y, boxSize, boxSize);
             g2.drawLine(n.x, n.y + boxSize / 2, n.x + boxSize, n.y + boxSize / 2);
             g2.drawLine(n.x + boxSize / 2, n.y + boxSize / 2, n.x + boxSize / 2, n.y + boxSize);
@@ -234,5 +260,12 @@ public class MPMGrapheAuto extends JPanel
             g2.drawLine(x2, y2, x, y);
 
         }
+    }
+
+    public void activerChemin() 
+    {
+        this.cheminActif = !cheminActif;
+        System.out.println("Chemin activé");
+        repaint(); // Redessine le panell
     }
 }
