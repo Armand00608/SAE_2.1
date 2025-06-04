@@ -1,3 +1,5 @@
+
+-encoding UTF-8
 ./Controleur.java
 ./ihm/BtnPanel.java
 ./ihm/FrameMpm.java
