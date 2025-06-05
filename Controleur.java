@@ -20,9 +20,14 @@ public class Controleur
 	public ArrayList<Tache>          getTaches()                     {return metier.getTaches();}
 	public ArrayList<CheminCritique> getCheminCritiques()            {return this.metier.getCheminsCritiques();}
 	public Tache                     chercherTacheParNom(String nom) {return metier.chercherTacheParNom(nom);}
+	
+    public boolean valeursValides(String nom, String duree, String ant) {return this.metier.valeursValides(nom, duree, ant);}
+
+    public String getErreur() {return this.metier.getErreur();}
 
 	public static void main(String[] args)
 	{
 		Controleur ctrl = new Controleur();		
 	}
+
 }
