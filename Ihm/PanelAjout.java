@@ -1,14 +1,15 @@
 package Ihm;
 
 import exFinal.Controleur;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.*;
 
-public class PanelAjout extends JPanel implements ActionListener {
+public class PanelAjout extends JPanel implements ActionListener 
+{
 
 	private JTextField txtNom;
 	private JTextField txtDure;
@@ -16,7 +17,8 @@ public class PanelAjout extends JPanel implements ActionListener {
 	private JButton    btnSubmit;
 	private Controleur ctrl;
 
-	public PanelAjout(Controleur ctrl){
+	public PanelAjout(Controleur ctrl)
+	{
 		this.ctrl = ctrl;
 
 		this.setLayout(new GridLayout(9,1));
@@ -62,7 +64,8 @@ public class PanelAjout extends JPanel implements ActionListener {
 
 	}
 
-	private String buildWord(List<Character> chars) {
+	private String buildWord(List<Character> chars) 
+	{
 		StringBuilder builder = new StringBuilder();
 		for (Character c : chars) {
 			builder.append(c);
@@ -72,59 +75,71 @@ public class PanelAjout extends JPanel implements ActionListener {
 
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == this.btnSubmit){
-			if (this.txtNom.getText().trim().isEmpty() || this.txtDure.getText().trim().isEmpty()) {
-				JOptionPane.showMessageDialog(null, "Veuillez écrire quelque chose", " Invalide", JOptionPane.ERROR_MESSAGE);
+	public void actionPerformed(ActionEvent e) 
+	{
+		
+		if (this.txtNom.getText().trim().isEmpty() || this.txtDure.getText().trim().isEmpty()) 
+		{
+			JOptionPane.showMessageDialog(null, "Veuillez écrire quelque chose", " Invalide", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		if (!this.txtDure.getText().matches("\\d+")) 
+		{
+			JOptionPane.showMessageDialog(null, "Veuillez écrire un nombre pour la durée", "Invalide", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		if (this.txtNom.getText().length() > 30)
+		{
+			JOptionPane.showMessageDialog(null, "Nom trop long", "Invalide", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+
+		List<Character> tabChar = new ArrayList<>();
+		for (Character car : this.txtPrec.getText().toCharArray()) 
+		{
+			if (!Character.isLetter(car) && car != ',' && car != ' ') 
+			{
+				JOptionPane.showMessageDialog(null, "Caractère invalide", "Invalide", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 
-			if (!this.txtDure.getText().matches("\\d+")) {
-				JOptionPane.showMessageDialog(null, "Veuillez écrire un nombre pour la durée", "Invalide", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
 
-			if (this.txtNom.getText().length() > 30){
-				JOptionPane.showMessageDialog(null, "Nom trop long", "Invalide", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-
-			List<Character> tabChar = new ArrayList<>();
-			for (Character car : this.txtPrec.getText().toCharArray()) {
-				if (!Character.isLetter(car) && car != ',' && car != ' ') {
-					JOptionPane.showMessageDialog(null, "Caractère invalide", "Invalide", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-
-
-				if (car == ',') {
-					String mot = buildWord(tabChar).trim();
-					tabChar.clear();
-					if (!mot.isEmpty() && this.ctrl.chercherTacheParNom(mot) == null) {
-						JOptionPane.showMessageDialog(null, "Tâche \"" + mot + "\" inexistante", "Erreur", JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-
-					if (mot.isEmpty()) {
-						JOptionPane.showMessageDialog(null, "Nom de tâche vide entre les virgules", "Erreur", JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-
-				} else {
-					tabChar.add(car);
-				}
-			}
-
-			if (!tabChar.isEmpty()) {
+			if (car == ',') 
+			{
 				String mot = buildWord(tabChar).trim();
-				if (!mot.isEmpty() && this.ctrl.chercherTacheParNom(mot) == null) {
+				tabChar.clear();
+				if (!mot.isEmpty() && this.ctrl.chercherTacheParNom(mot) == null) 
+				{
 					JOptionPane.showMessageDialog(null, "Tâche \"" + mot + "\" inexistante", "Erreur", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
+
+				if (mot.isEmpty()) 
+				{
+					JOptionPane.showMessageDialog(null, "Nom de tâche vide entre les virgules", "Erreur", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
 			}
-
-
+			else 
+			{
+				tabChar.add(car);
+			}
 		}
+
+		if (!tabChar.isEmpty()) 
+		{
+			String mot = buildWord(tabChar).trim();
+			if (!mot.isEmpty() && this.ctrl.chercherTacheParNom(mot) == null) 
+			{
+				JOptionPane.showMessageDialog(null, "Tâche \"" + mot + "\" inexistante", "Erreur", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+		}
+
+
 	}
 }
