@@ -1,9 +1,8 @@
-package main.metier;
+package Metier;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-
 
 public class Tache
 {
@@ -159,5 +158,4 @@ public class Tache
 
 		return resultat;
 	}
-
 }

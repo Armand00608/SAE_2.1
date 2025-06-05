@@ -1,7 +1,10 @@
-package main.ihm;
-import javax.swing.*;
+package Ihm;
+
+import exFinal.Controleur;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.*;
 
 public class BarreMenu extends JMenuBar implements ActionListener {
 	private JMenuItem menuiSauv;
@@ -9,8 +12,12 @@ public class BarreMenu extends JMenuBar implements ActionListener {
 	private JMenuItem menuiSupp;
 	private JMenuItem menuiDure;
 
-	public BarreMenu(){
+	private boolean frameAjout;
+	private Controleur ctrl;
 
+	public BarreMenu(Controleur ctrl){
+
+		this.ctrl = ctrl;
 		JMenu menuFichier = new JMenu("Fichier");
 		JMenu menuEdition = new JMenu("Edition");
 
@@ -18,7 +25,7 @@ public class BarreMenu extends JMenuBar implements ActionListener {
 
 		this.menuiAjou = new JMenuItem("Ajouter");
 		this.menuiSupp = new JMenuItem("Supprimer");
-		this.menuiDure = new JMenuItem("Changer DurÃ©e");
+		this.menuiDure = new JMenuItem("Changer Durée");
 
 		menuFichier.add(this.menuiSauv);
 
@@ -36,6 +43,13 @@ public class BarreMenu extends JMenuBar implements ActionListener {
 		this.menuiAjou.addActionListener(this);
 	}
 
+
 	@Override
-	public void actionPerformed(ActionEvent e) {}
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == this.menuiAjou){
+			if (!this.frameAjout){
+				new FrameAjout(this.ctrl);
+			}
+		}
+	}
 }
