@@ -32,4 +32,12 @@ public class Controleur
 	{
 		Controleur ctrl = new Controleur();		
 	}
+
+    public boolean enregistrer() 
+	{
+		String infosNoeuds, infosArcs;
+		infosNoeuds = this.ihm.getInfos("noeud");
+		infosArcs   = this.ihm.getInfos("arc");
+		return this.metier.enregistrer(infosNoeuds, infosArcs);
+    }
 }

@@ -55,5 +55,12 @@ public class BarreMenu extends JMenuBar implements ActionListener {
 		{
 
 		}
+		if (e.getSource() == this.menuiSauv)
+		{
+			if (this.ctrl.enregistrer())
+				System.out.println("Fichier sauvegardé avec succès");
+			else
+				System.out.println("Erreur lors de la sauvegarde");
+		}
 	}
 }

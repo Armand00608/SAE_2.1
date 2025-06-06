@@ -33,4 +33,9 @@ public class FrameMpm extends JFrame
 	}
 
 	public void majIhm(){this.graphPanel.majIhm();}
+
+	public String getInfos(String demande)
+	{
+		return this.graphPanel.getInfos(demande);
+	}
 }

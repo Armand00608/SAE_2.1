@@ -214,6 +214,7 @@ import javax.swing.*;
 				g2.drawLine(n.x, n.y + boxSize / 2, n.x + boxSize, n.y + boxSize / 2);
 				g2.drawLine(n.x + boxSize / 2, n.y + boxSize / 2, n.x + boxSize / 2, n.y + boxSize);
 
+
 				FontMetrics fm = g2.getFontMetrics();
 				int textWidth = fm.stringWidth(n.nom);
 				g2.drawString(n.nom, n.x + (boxSize - textWidth) / 2, n.y + 20);
@@ -336,4 +337,45 @@ import javax.swing.*;
 			}
 		}
 	}
+
+        public String getInfos(String demande) 
+		{
+			String sRet = "";
+			if ( demande.equals("noeud"))
+				for (Noeud n : this.noeuds)
+				{
+					sRet += n.nom + "|" + n.x + "," + n.y + "|" + n.tot + "," + n.tard;
+					for (Arc a : this.arcs)
+					{
+						if (a.from.equals(n.nom))
+						{
+							sRet += "|" + a.poids + "\n";
+							break;
+						}
+					}
+				}
+			else
+			{
+				for (Arc a : this.arcs)
+				{
+					Point p1 = new Point();
+					Point p2 = new Point();
+					for (Noeud n : this.noeuds)
+					{
+						if (n.nom.equals(a.from))
+						{
+							p1.x = n.x;
+							p1.y = n.y;
+						}
+						if (n.nom.equals(a.to))
+						{
+							p2.x = n.x;
+							p2.y = n.y;
+							sRet += p1.x + "," + p1.y + "|" + p2.x + "," + p2.y + "|" + a.poids + "\n";
+						}
+					}
+				}
+			}
+			return sRet;
+        }
 }

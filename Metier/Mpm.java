@@ -3,6 +3,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -154,6 +155,31 @@ public class Mpm
 		this.chargerFichier();
 	}
 
+	public boolean enregistrer(String infosNoeuds, String infosArcs) 
+	{
+		boolean bRet;
+		try {
+			// Write nodes info
+			try (PrintWriter writer = new PrintWriter(new FileWriter("./enreg/enregistrementNoeuds.txt"))) 
+			{
+				writer.print(infosNoeuds);
+			}
+			
+			// Write arcs info
+			try (PrintWriter writer = new PrintWriter(new FileWriter("./enreg/enregistrementArcs.txt"))) 
+			{
+				writer.print(infosArcs);
+			}
+			
+			bRet = true;
+		}
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+			bRet = false;
+		}
+		return bRet;
+	}
 
 	public ArrayList<Tache> getTaches() {
 		return this.taches;
