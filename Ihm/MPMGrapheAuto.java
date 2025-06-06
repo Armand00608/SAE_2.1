@@ -1,6 +1,6 @@
-package Ihm;
-import Metier.CheminCritique;
-import Metier.Tache;
+package exFinal.Ihm;
+import exFinal.Metier.CheminCritique;
+import exFinal.Metier.Tache;
 import exFinal.Controleur;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -45,10 +45,7 @@ import javax.swing.*;
 			this.ctrl            =  ctrl;
 			this.cheminsCritiques = this.ctrl.getCheminCritiques();
 
-			initialiserNoeudsArcs();
-			creerGraphe();
-
-
+			this.majIhm();
 			
 			// Ajoute des listeners
 			GereSouris GereSouris = new GereSouris();
@@ -73,11 +70,22 @@ import javax.swing.*;
 			return null;
 		}
 
+		public void majIhm()
+		{
+			this.cheminsCritiques = this.ctrl.getCheminCritiques();
+			this.initialiserNoeudsArcs();
+			this.creerGraphe();
+			repaint();
+		}
+
 		/**
 		 * Crée les nœuds et arcs à partir des tâches du contrôleur.
 		 */
 		private void initialiserNoeudsArcs()
 		{
+			noeuds.clear();
+			arcs.clear();
+
 			ArrayList<Tache> taches  = new ArrayList<>(this.ctrl.getTaches());
 			HashMap<String, Integer> dicTaches = new HashMap<>();
 
@@ -100,7 +108,7 @@ import javax.swing.*;
 								colPlusGrd = dicTaches.get(nomTache)+1;
 						}
 						if(colPlusGrd != -1)
-						{	
+						{
 							dicTaches.put(t.getNom(), colPlusGrd);
 						}
 						this.etapePlusTarMax = this.nbCol = colPlusGrd;
@@ -113,7 +121,7 @@ import javax.swing.*;
 			{
 				Noeud n = new Noeud(t.getNom(), t.getDatePlusTot(), t.getDatePlusTard(), dicTaches.get(t.getNom()), false);
 				noeuds.add(n);
-				for (CheminCritique ch : this.cheminsCritiques) 
+				for (CheminCritique ch : this.cheminsCritiques)
 				{
 					for (Tache tacheCh : ch.getTachesCritiques())
 					{

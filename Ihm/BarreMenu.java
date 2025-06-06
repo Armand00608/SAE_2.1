@@ -1,4 +1,4 @@
-package Ihm;
+package exFinal.Ihm;
 
 import exFinal.Controleur;
 
@@ -12,8 +12,8 @@ public class BarreMenu extends JMenuBar implements ActionListener {
 	private JMenuItem menuiSupp;
 	private JMenuItem menuiDure;
 
-	private boolean frameAjout;
 	private Controleur ctrl;
+	private FrameAjout frameAjout;
 
 	public BarreMenu(Controleur ctrl){
 
@@ -46,10 +46,14 @@ public class BarreMenu extends JMenuBar implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == this.menuiAjou){
-			if (!this.frameAjout){
-				new FrameAjout(this.ctrl);
-			}
+		if (e.getSource() == this.menuiAjou)
+		{
+			frameAjout = new FrameAjout(this.ctrl);
+		}
+
+		if (e.getSource() == this.menuiSupp)
+		{
+
 		}
 	}
 }

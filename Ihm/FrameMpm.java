@@ -1,4 +1,4 @@
-package Ihm;
+package exFinal.Ihm;
 import exFinal.Controleur;
 import java.awt.*;
 import javax.swing.*;
@@ -31,4 +31,6 @@ public class FrameMpm extends JFrame
 
 		this.setVisible(true);
 	}
+
+	public void majIhm(){this.graphPanel.majIhm();}
 }

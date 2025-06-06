@@ -1,4 +1,4 @@
-package Ihm;
+package exFinal.Ihm;
 
 public class Arc
 {
