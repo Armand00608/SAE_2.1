@@ -15,6 +15,7 @@ public class Mpm
 	private ArrayList<Tache> taches = new ArrayList<Tache>();
 	private String dateDebut;
 	private String nomFichier;
+	private String msgErreur;
 
 	// Constructeur : charge le fichier et initialise les tâches
 	public Mpm(String nomFichier, String dateDebut) 
@@ -157,6 +158,124 @@ public class Mpm
 	public ArrayList<Tache> getTaches() {
 		return this.taches;
 	}
+
+	public boolean valeursValides(String nom, String duree, String ant)
+	{
+		boolean bRet = true;
+		this.msgErreur = "";
+
+		if (nom == null || nom.trim().isEmpty() ) 
+		{
+			this.msgErreur += "Nom de tâche non saisi\n";
+			return false;
+		}
+
+		// si la tâche existe déjà
+		for (Tache t : this.taches)
+		{
+			if (t.getNom().equals(nom.trim()))
+			{
+				this.msgErreur += "Une tâche avec ce nom existe déjà\n";
+				return false;
+			}
+		}
+
+		// le nom ne doit pas contenir les delemiteurs | et , dans son nom
+		if (nom.contains("|") || nom.contains(","))
+		{
+			this.msgErreur += "Le nom de tâche ne peut pas contenir les caractères '|' ou ',' \n";
+			return false;
+		}
+
+
+		if (duree == null || duree.trim().isEmpty())
+		{
+			this.msgErreur += "Durée non saisie\n";
+			return false;
+		}
+		
+		try 
+		{
+			int duration = Integer.parseInt(duree.trim());
+			if (duration <= 0)
+			{
+				this.msgErreur += "La durée doit être strictement supérieure à 0\n";
+				return false;
+			}
+		} 
+		catch (NumberFormatException e) 
+		{
+			this.msgErreur += "La durée doit être un nombre entier\n";
+			return false;
+		}
+
+
+
+		
+		if (bRet && ant != null && !ant.trim().isEmpty()) {
+			String nomTacheActuelle = (nom != null) ? nom.trim() : "";
+			String[] antecedents = ant.trim().split(",");
+
+			for (String unAntecedent : antecedents) {
+				unAntecedent = unAntecedent.trim();
+				if (unAntecedent.isEmpty()) continue; // Ignorer les virgules en trop (ex: "A,,B")
+
+				
+				if (unAntecedent.equals("Fin")) 
+				{
+					this.msgErreur += "La tâche 'Fin' ne peut pas être un prédécesseur.\n";
+					return false;
+				}
+				
+				if (unAntecedent.equals("Debut")) 
+				{
+					this.msgErreur += "La tâche 'Debut' ne doit pas être spécifiée comme prédécesseur.\n";
+					return false;
+				}
+
+				if (!nomTacheActuelle.isEmpty() && unAntecedent.equals(nomTacheActuelle)) 
+				{
+					this.msgErreur += "La tâche '" + nomTacheActuelle + "' ne peut pas dépendre d'elle-même.\n";
+					return false;
+				}
+
+				boolean trouve = false;
+				for (Tache tExistante : this.taches) 
+				{
+					if (tExistante.getNom().equals(unAntecedent)) 
+					{
+						trouve = true;
+						break;
+					}
+				}
+				if (!trouve && !unAntecedent.equals("Debut") && !unAntecedent.equals("Fin")) 
+				{
+					this.msgErreur += "Le prédécesseur spécifié '" + unAntecedent + "' n'existe pas.\n";
+					return false;
+				}
+
+				// 5. Dépendance cyclique (plus complexe)
+			}
+		} 
+		// else if (ant != null && !ant.trim().isEmpty() && !bRet) 
+		// {
+		// 	// Si bRet est déjà faux à cause du nom ou de la durée,
+		// 	// on peut quand même mentionner que les prédécesseurs n'ont pas été vérifiés en détail.
+		// 	// this.msgErreur += "Validation des prédécesseurs sautée car le nom ou la durée de la tâche est invalide.\n";
+		// }
+
+
+
+
+
+		return bRet;
+	}
+
+	public String getErreur()
+	{
+		return this.msgErreur;
+	}
+
 
 	public void chargerFichier()
 	{

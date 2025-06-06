@@ -72,64 +72,21 @@ public class PanelAjout extends JPanel implements ActionListener {
 
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == this.btnSubmit){
-			if (this.txtNom.getText().trim().isEmpty() || this.txtDure.getText().trim().isEmpty()) {
-				JOptionPane.showMessageDialog(null, "Veuillez écrire quelque chose", " Invalide", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-			if (!this.txtDure.getText().matches("\\d+")) {
-				JOptionPane.showMessageDialog(null, "Veuillez écrire un nombre pour la durée", "Invalide", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-			if (this.txtNom.getText().length() > 30){
-				JOptionPane.showMessageDialog(null, "Nom trop long", "Invalide", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-			List<Character> tabChar = new ArrayList<>();
-			for (Character car : this.txtPrec.getText().toCharArray()) {
-				if (!Character.isLetter(car) && car != ',' && car != ' ') {
-					JOptionPane.showMessageDialog(null, "Caractère invalide", "Invalide", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-
-
-				if (car == ',') {
-					String mot = buildWord(tabChar).trim();
-					tabChar.clear();
-					if (!mot.isEmpty() && this.ctrl.chercherTacheParNom(mot) == null) {
-						JOptionPane.showMessageDialog(null, "Tâche \"" + mot + "\" inexistante", "Erreur", JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-
-					if (mot.isEmpty()) {
-						JOptionPane.showMessageDialog(null, "Nom de tâche vide entre les virgules", "Erreur", JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-
-				} else {
-					tabChar.add(car);
-				}
-			}
-
-			if (!tabChar.isEmpty()) {
-				String mot = buildWord(tabChar).trim();
-				if (!mot.isEmpty() && this.ctrl.chercherTacheParNom(mot) == null) {
-					JOptionPane.showMessageDialog(null, "Tâche \"" + mot + "\" inexistante", "Erreur", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-			}
-
+	public void actionPerformed(ActionEvent e) 
+	{
+		if ( this.ctrl.valeursValides(this.txtNom.getText(), this.txtDure.getText(), this.txtPrec.getText()))
+		{
 			this.ctrl.ajouterTache(this.txtNom.getText(), this.txtPrec.getText(), this.txtDure.getText());
-
+	
 			Window fenetre = SwingUtilities.getWindowAncestor(this);
-			if (fenetre != null) {
+			if (fenetre != null) 
 				fenetre.dispose();
-			}
-
 		}
+		else
+		{
+			JOptionPane.showMessageDialog(null, this.ctrl.getErreur(), " Invalide", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
 	}
 }

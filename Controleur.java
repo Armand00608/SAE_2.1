@@ -21,6 +21,10 @@ public class Controleur
 	public ArrayList<CheminCritique> getCheminCritiques()                               {return this.metier.getCheminsCritiques();}
 	public Tache                     chercherTacheParNom(String nom)                    {return metier.chercherTacheParNom(nom);}
 	public void                      majIhm()                                           {this.ihm.majIhm();}
+	
+    public boolean valeursValides(String nom, String duree, String ant) {return this.metier.valeursValides(nom, duree, ant);}
+
+    public String getErreur() {return this.metier.getErreur();}
 
 	public void ajouterTache(String nom, String prc, String duree) {this.metier.ajouterTache(nom, prc, duree);}
 
