@@ -63,12 +63,12 @@ public class Mpm
 
 	        if (tacheActuelle.getNom().equals("Fin")) 
 	        {
-	            CheminCritique cp = new CheminCritique();
+	            CheminCritique cTemp = new CheminCritique();
 	            for (Tache t : cheminActuel)
-	                cp.ajouterTache(t);
+	                cTemp.ajouterTache(t);
 
-	            cp.setDureeTotale(tacheActuelle.getDatePlusTot());
-	            this.cheminsCritiques.add(cp);
+	            cTemp.setDureeTotale(tacheActuelle.getDatePlusTot());
+	            this.cheminsCritiques.add(cTemp);
 	        }
 	        else 
 	        {
