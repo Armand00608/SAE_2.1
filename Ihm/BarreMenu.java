@@ -1,9 +1,10 @@
 package exFinal.Ihm;
 
 import exFinal.Controleur;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+
 import javax.swing.*;
 
 public class BarreMenu extends JMenuBar implements ActionListener {
@@ -55,12 +56,32 @@ public class BarreMenu extends JMenuBar implements ActionListener {
 		{
 
 		}
-		if (e.getSource() == this.menuiSauv)
+
+		if (e.getSource() == this.menuiSauv) 
 		{
-			if (this.ctrl.enregistrer())
-				System.out.println("Fichier sauvegardé avec succès");
-			else
-				System.out.println("Erreur lors de la sauvegarde");
+			
+			JFileChooser dialogueEnregistrement = new JFileChooser();
+			dialogueEnregistrement.setDialogTitle("Enregistrer les positions sous...");
+			dialogueEnregistrement.setCurrentDirectory(new File("./enreg"));
+		
+			dialogueEnregistrement.setSelectedFile(new File("mon_projet_mpm.txt"));
+		
+			int choixUtilisateur = dialogueEnregistrement.showSaveDialog(this.getParent());
+		
+			if (choixUtilisateur == JFileChooser.APPROVE_OPTION) 
+			{
+				File fichierAEnregistrer = dialogueEnregistrement.getSelectedFile();
+				String cheminAbsolu = fichierAEnregistrer.getAbsolutePath();
+				
+				if (this.ctrl.enregistrer(cheminAbsolu))
+					JOptionPane.showMessageDialog(null, "Fichier " + fichierAEnregistrer.getName() + " enregistré avec succès \nChemin :" + cheminAbsolu, " Enregistrement", JOptionPane.PLAIN_MESSAGE);
+				else
+					JOptionPane.showMessageDialog(null, "Erreur d'enregistrement", " Enregistrement", JOptionPane.ERROR_MESSAGE);
+			} 
+			else {
+				// L'utilisateur a cliqué sur "Annuler" ou a fermé la fenêtre
+				JOptionPane.showMessageDialog(null, "Enregistrement annulé par l'utilisateur.", "Enregistrement", JOptionPane.INFORMATION_MESSAGE);
+			}
 		}
 	}
 }

@@ -95,7 +95,7 @@ public class Tache
 	// Vérifie si la tâche est critique (aucune marge)
 	public boolean estCritique() {return this.datePlusTot == this.datePlusTard;}
 
-	private String ajouterJours(String dateDebut, int nbJours)
+	public String ajouterJours(String dateDebut, int nbJours)
 	{
 		try
 		{

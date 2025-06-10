@@ -1,12 +1,11 @@
 package exFinal.Ihm;
 
 import exFinal.Controleur;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
+import javax.swing.*;
 
 public class PanelAjout extends JPanel implements ActionListener {
 
@@ -77,6 +76,7 @@ public class PanelAjout extends JPanel implements ActionListener {
 		if ( this.ctrl.valeursValides(this.txtNom.getText(), this.txtDure.getText(), this.txtPrec.getText()))
 		{
 			this.ctrl.ajouterTache(this.txtNom.getText(), this.txtPrec.getText(), this.txtDure.getText());
+			this.ctrl.majIhm();
 	
 			Window fenetre = SwingUtilities.getWindowAncestor(this);
 			if (fenetre != null) 

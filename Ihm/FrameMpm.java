@@ -19,12 +19,11 @@ public class FrameMpm extends JFrame
 		this.setSize(1000, 700);
 		this.setLayout(new BorderLayout());
 
-		JMenuBar menubMaBarre = new BarreMenu(this.ctrl);
-		this.setJMenuBar( menubMaBarre );
-
-
 		this.graphPanel = new MPMGrapheAuto(ctrl);
 		this.add(this.graphPanel, BorderLayout.CENTER);
+
+		JMenuBar menubMaBarre = new BarreMenu(this.ctrl);
+		this.setJMenuBar( menubMaBarre );
 
 		this.btnPanel = new BtnPanel(this.graphPanel);
 		this.add(this.btnPanel, BorderLayout.SOUTH);
@@ -34,8 +33,8 @@ public class FrameMpm extends JFrame
 
 	public void majIhm(){this.graphPanel.majIhm();}
 
-	public String getInfos(String demande)
+	public String getInfos()
 	{
-		return this.graphPanel.getInfos(demande);
+		return this.graphPanel.getInfos();
 	}
 }

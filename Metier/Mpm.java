@@ -1,6 +1,7 @@
 package exFinal.Metier;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -43,50 +44,50 @@ public class Mpm
 
 	private void creerCheminCritique() 
 	{
-		this.cheminsCritiques.clear();
-		Tache tacheDebut = chercherTacheParNom("Debut");
+	    this.cheminsCritiques.clear();
+	    Tache tacheDebut = chercherTacheParNom("Debut");
 
-		if (tacheDebut == null || !tacheDebut.estCritique())
-			return;
+	    if (tacheDebut == null || !tacheDebut.estCritique())
+	        return;
 
-		Stack<EtatExploration> pile = new Stack<>();
-		ArrayList<Tache> cheminInitial = new ArrayList<>();
-		cheminInitial.add(tacheDebut);
-		pile.push(new EtatExploration(tacheDebut, cheminInitial));
+	    ArrayList<EtatExploration> liste = new ArrayList<>();
+	    ArrayList<Tache> cheminInitial = new ArrayList<>();
+	    cheminInitial.add(tacheDebut);
+	    liste.add(new EtatExploration(tacheDebut, cheminInitial));
 
-		while (!pile.isEmpty()) 
-		{
-			EtatExploration etatCourant = pile.pop();
-			Tache tacheActuelle = etatCourant.tacheActuelle;
-			ArrayList<Tache> cheminActuel = etatCourant.cheminJusquaIci;
+	    while (!liste.isEmpty()) 
+	    {
+	        EtatExploration etatCourant = liste.remove(liste.size() - 1); // Équivalent de pop()
+	        Tache tacheActuelle = etatCourant.tacheActuelle;
+	        ArrayList<Tache> cheminActuel = etatCourant.cheminJusquaIci;
 
-			if (tacheActuelle.getNom().equals("Fin")) 
-			{
-				CheminCritique cp = new CheminCritique();
-				for (Tache t : cheminActuel)
-					cp.ajouterTache(t);
+	        if (tacheActuelle.getNom().equals("Fin")) 
+	        {
+	            CheminCritique cp = new CheminCritique();
+	            for (Tache t : cheminActuel)
+	                cp.ajouterTache(t);
 
-				cp.setDureeTotale(tacheActuelle.getDatePlusTot());
-				this.cheminsCritiques.add(cp);
-			}
-			else 
-			{
-				List<Tache> succCritiques = new ArrayList<>();
-				for (Tache successeur : tacheActuelle.getSuivants()) 
-				{
-					if (successeur.estCritique())
-						succCritiques.add(successeur);
-				}
+	            cp.setDureeTotale(tacheActuelle.getDatePlusTot());
+	            this.cheminsCritiques.add(cp);
+	        }
+	        else 
+	        {
+	            List<Tache> succCritiques = new ArrayList<>();
+	            for (Tache successeur : tacheActuelle.getSuivants()) 
+	            {
+	                if (successeur.estCritique())
+	                    succCritiques.add(successeur);
+	            }
 
-				for (int i = succCritiques.size() - 1; i >= 0; i--) 
-				{
-					Tache successeur = succCritiques.get(i);
-					ArrayList<Tache> prochainChemin = new ArrayList<>(cheminActuel);
-					prochainChemin.add(successeur);
-					pile.push(new EtatExploration(successeur, prochainChemin));
-				}
-			}
-		}
+	            for (int i = succCritiques.size() - 1; i >= 0; i--) 
+	            {
+	                Tache successeur = succCritiques.get(i);
+	                ArrayList<Tache> prochainChemin = new ArrayList<>(cheminActuel);
+	                prochainChemin.add(successeur);
+	                liste.add(new EtatExploration(successeur, prochainChemin));
+	            }
+	        }
+	    }
 	}
 
 
@@ -155,28 +156,24 @@ public class Mpm
 		this.chargerFichier();
 	}
 
-	public boolean enregistrer(String infosNoeuds, String infosArcs) 
+	
+	public boolean enregistrer(String infosNoeuds, String cheminAbsolu) 
 	{
 		boolean bRet;
-		try {
-			// Write nodes info
-			try (PrintWriter writer = new PrintWriter(new FileWriter("./enreg/enregistrementNoeuds.txt"))) 
-			{
-				writer.print(infosNoeuds);
-			}
-			
-			// Write arcs info
-			try (PrintWriter writer = new PrintWriter(new FileWriter("./enreg/enregistrementArcs.txt"))) 
-			{
-				writer.print(infosArcs);
-			}
-			
-			bRet = true;
-		}
-		catch (IOException e) 
+		try
 		{
-			e.printStackTrace();
+			PrintWriter pw = new PrintWriter( new FileOutputStream(cheminAbsolu ) );
+
+			pw.println ( infosNoeuds );
+
+			bRet = true;
+
+			pw.close();
+		}
+		catch (Exception e)
+		{ 
 			bRet = false;
+			e.printStackTrace(); 
 		}
 		return bRet;
 	}
@@ -302,6 +299,7 @@ public class Mpm
 		return this.msgErreur;
 	}
 
+	public String getDateDebut() {return this.dateDebut;}
 
 	public void chargerFichier()
 	{

@@ -9,7 +9,8 @@ Ihm/BarreMenu.java
 Ihm/MPMGrapheAuto.java
 Ihm/FrameMpm.java
 Ihm/PanelAjout.java
-Ihm/FrameMpm.java
 Ihm/FrameAjout.java
+Ihm/FrameMpm.java
+Ihm/FrameNoeudInfo.java
 
 Controleur.java

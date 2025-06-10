@@ -1,7 +1,8 @@
 package exFinal.Ihm;
+
+import exFinal.Controleur;
 import exFinal.Metier.CheminCritique;
 import exFinal.Metier.Tache;
-import exFinal.Controleur;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -46,6 +47,8 @@ import javax.swing.*;
 			this.cheminsCritiques = this.ctrl.getCheminCritiques();
 
 			this.majIhm();
+
+			this.etapePlusTarMax = this.nbCol;
 			
 			// Ajoute des listeners
 			GereSouris GereSouris = new GereSouris();
@@ -75,6 +78,10 @@ import javax.swing.*;
 			this.cheminsCritiques = this.ctrl.getCheminCritiques();
 			this.initialiserNoeudsArcs();
 			this.creerGraphe();
+
+			if (this.etapePlusTotMax == this.nbCol )
+				this.etapePlusTotMax = this.nbCol + 1;
+
 			repaint();
 		}
 
@@ -111,7 +118,7 @@ import javax.swing.*;
 						{
 							dicTaches.put(t.getNom(), colPlusGrd);
 						}
-						this.etapePlusTarMax = this.nbCol = colPlusGrd;
+						 this.nbCol = colPlusGrd;
 					}
 				}
 			}
@@ -174,75 +181,143 @@ import javax.swing.*;
 			}
 		}
 
+
+		public ArrayList<Noeud> getNoeudsMemeSvt(Noeud n, ArrayList<Noeud> lstNSvt, ArrayList<Noeud> lstPre) 
+		{
+			ArrayList<Tache> lstTSvt = ctrl.chercherTacheParNom(n.getNom()).getSuivants();
+
+			for (Tache tacheSvt : lstTSvt) {
+				Noeud noeudSvt = getNoeud(tacheSvt.getNom());
+
+				// Obtenir les prédécesseurs du suivant
+				ArrayList<Tache> tachesPrecedentes = ctrl.chercherTacheParNom(tacheSvt.getNom()).getPrecedents();
+				ArrayList<Noeud> noeudsPrecedents = new ArrayList<>();
+				for (Tache t : tachesPrecedentes) {
+					noeudsPrecedents.add(getNoeud(t.getNom()));
+				}
+
+				// Vérifier si tous les noeuds de lstPre sont dans les prédécesseurs du suivant
+				if (contientTous(noeudsPrecedents, lstPre)) {
+					if (!lstNSvt.contains(noeudSvt)) {
+						lstNSvt.add(noeudSvt);
+					}
+				}
+			}
+
+			return lstNSvt;
+		}
+
+
+		private boolean contientTous(ArrayList<Noeud> conteneur, ArrayList<Noeud> contenu) 
+		{
+			for (Noeud n : contenu) {
+				if (!conteneur.contains(n)) {
+					return false;
+				}
+			}
+			return true;
+		}
+
 		/**
 		 * Affiche le graphe (arcs et nœuds) dans la fenêtre graphique.
 		 */
 		protected void paintComponent(Graphics g)
-		{
-			super.paintComponent(g);
-			Graphics2D g2 = (Graphics2D) g;
-			g2.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
-			for (Arc arc : arcs)
-			{
-				Noeud from = getNoeud(arc.from);
-				Noeud to   = getNoeud(arc.to);
+            for (Arc arc : arcs)
+            {
+                Noeud noeudDepart  = getNoeud(arc.from);
+                Noeud noeudArrivee = getNoeud(arc.to);        
 
-				int x1 = from.x + boxSize;
-				int y1 = from.y + boxSize / 2;
-				int x2 = to.x;
-				int y2 = to.y + boxSize / 2;
+                int x1 = noeudDepart.x  + boxSize;
+                int y1 = noeudDepart.y  + boxSize / 2;
 
-				g2.setColor(Color.BLUE);
-				g2.drawLine(x1, y1, x2, y2);
-				g2.setColor(new Color(201, 87, 30));
-				g2.drawString(String.valueOf(arc.poids), (x1 + x2) / 2, (y1 + y2) / 2 - 5);
-				drawArrowHead(g2, x1, y1, x2, y2);
-				g2.setColor(Color.BLACK);
-			}
+                int x2 = noeudArrivee.x;
+                int y2 = noeudArrivee.y + boxSize / 2;
 
-			for (Noeud n : noeuds)
-			{
-				if (n.estChemin && this.cheminActif)
-				{
-					g2.setColor(Color.GRAY);
-					g2.fillRect(n.x, n.y, boxSize, boxSize);
-				}
-				g2.setColor(Color.BLACK);
+                // Point du milieu
+                int milieuX = (x1 + x2) / 2;
+                int milieuY = (y1 + y2) / 2;
+                
+                // Calculer la direction de la ligne
+                double deltaX = x2 - x1;
+                double deltaY = y2 - y1;
+                double longueur = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // Direction unitaire
+                double directionX = deltaX / longueur;
+                double directionY = deltaY / longueur;
+                
+                // Espace avant et après le texte
+                int espace = 10;
+                
+                // Premier bout de ligne (s'arrête avant le texte)
+                int arretX = (int)(milieuX - espace * directionX);
+                int arretY = (int)(milieuY - espace * directionY);
+                
+                // Deuxième bout de ligne (reprend après le texte)
+                int repriseX = (int)(milieuX + espace * directionX);
+                int repriseY = (int)(milieuY + espace * directionY);
 
-				g2.drawRect(n.x, n.y, boxSize, boxSize);
-				g2.drawLine(n.x, n.y + boxSize / 2, n.x + boxSize, n.y + boxSize / 2);
-				g2.drawLine(n.x + boxSize / 2, n.y + boxSize / 2, n.x + boxSize / 2, n.y + boxSize);
+                g2.setColor(Color.BLUE);
+                // Première ligne
+                g2.drawLine(x1, y1, arretX, arretY);
+                // Deuxième ligne
+                g2.drawLine(repriseX, repriseY, x2, y2);
+                
+                // Texte au milieu
+                g2.setColor(new Color(201, 87, 30));
+                g2.drawString(String.valueOf(arc.poids), milieuX - 5, milieuY + 5);
+                
+                // Flèche
+                drawArrowHead(g2, repriseX, repriseY, x2, y2);
+                g2.setColor(Color.BLACK);
+            }
+            for (Noeud n : this.noeuds)
+            {
+                if (n.estChemin && this.cheminActif)
+                {
+                    g2.setColor(Color.GRAY);
+                    g2.fillRect(n.x, n.y, boxSize, boxSize);
+                }
+                g2.setColor(Color.BLACK);
 
+                g2.drawRect(n.x, n.y, boxSize, boxSize);
+                g2.drawLine(n.x, n.y + boxSize / 2, n.x + boxSize, n.y + boxSize / 2);
+                g2.drawLine(n.x + boxSize / 2, n.y + boxSize / 2, n.x + boxSize / 2, n.y + boxSize);
 
-				FontMetrics fm = g2.getFontMetrics();
-				int textWidth = fm.stringWidth(n.nom);
-				g2.drawString(n.nom, n.x + (boxSize - textWidth) / 2, n.y + 20);
-				
-			}
+                FontMetrics fm = g2.getFontMetrics();
+                int textWidth = fm.stringWidth(n.nom);
+                g2.drawString(n.nom, n.x + (boxSize - textWidth) / 2, n.y + 20);
+                
+            }
 
-				//Plus tot
-				for (Noeud n : this.noeuds) 
-				{
-					
+            
+                for (Noeud n : this.noeuds) 
+                {
+                    
+                    //Affichage au Plus tot
+                    if (n.col < this.etapePlusTotMax) 
+                    {
+                        g2.setColor  (new Color(30, 189, 120));
+                        g2.drawString(String.valueOf(n.tot), n.x + 15, n.y + boxSize - 10);
+                    }
+                    
+                    //Affichage au Plus tard
+                    g2.setColor  (Color.RED);
+                    if (n.col > this.etapePlusTarMax ) 
+                    {
+                        g2.drawString(String.valueOf(n.tard), n.x + boxSize - 25, n.y + boxSize - 10);
+                        
+                    }                    
+                }
+                
+                g2.setColor  (Color.BLACK);
 
-					if (n.col < this.etapePlusTotMax) 
-					{
-						g2.setColor  (new Color(30, 189, 120));
-						g2.drawString(String.valueOf(n.tot), n.x + 15, n.y + boxSize - 10);
-					}
-
-					g2.setColor  (Color.RED);
-					if (n.col > this.etapePlusTarMax ) 
-					{
-						g2.drawString(String.valueOf(n.tard), n.x + boxSize - 25, n.y + boxSize - 10);
-						
-					}					
-				}
-				
-				g2.setColor  (Color.BLACK);
-
-		}
+        }
 
 		public void activerChemin() 
 		{
@@ -257,6 +332,7 @@ import javax.swing.*;
 
 			if (this.etapePlusTotMax >  this.nbCol) 
 				return false;
+				
 			
 			return true;
 		}
@@ -305,77 +381,95 @@ import javax.swing.*;
 			}
 		}
 
-		private class GereSouris extends MouseAdapter
-		{
-		
-		public void mousePressed(MouseEvent e)
-		{
-			// Chercher le nœud cliqué
-			noeudSelectionne = getNoeudAPosition(e.getX(), e.getY());
-			if (noeudSelectionne != null)
-			{
-				// Calculer l'offset pour un déplacement fluide
-				offsetX = e.getX() - noeudSelectionne.x;
-				offsetY = e.getY() - noeudSelectionne.y;
-			}
+		private ArrayList<Noeud> getNoeudsSvtDePreActuel(Noeud nPreActuel, ArrayList<Noeud> lstNSvtDePre, List<Noeud> lstNoeudPreActuel) {
+			throw new UnsupportedOperationException("Not supported yet.");
 		}
-			
-		public void mouseReleased(MouseEvent e)
-		{
-			noeudSelectionne = null;
-		}
-		
-		public void mouseDragged(MouseEvent e)
-		{
-			if (noeudSelectionne != null)
-			{
-				// Mettre à jour les coordonnées du nœud
-				noeudSelectionne.x = e.getX() - offsetX;
-				noeudSelectionne.y = e.getY() - offsetY;
-				
-				repaint();
-			}
-		}
-	}
 
-        public String getInfos(String demande) 
+
+		private void afficherInfosNoeud(Noeud n) 
+		{
+			Tache tache = null;
+			for (Tache t : ctrl.getTaches()) {
+				if (t.getNom().equals(n.nom)) {
+					tache = t;
+					break;
+				}
+			}
+			if (tache == null) return;
+
+			FrameNoeudInfo frameInfo = new FrameNoeudInfo(tache, this.ctrl);
+			frameInfo.setVisible(true);
+		}
+
+		public String getInfos() 
 		{
 			String sRet = "";
-			if ( demande.equals("noeud"))
-				for (Noeud n : this.noeuds)
-				{
-					sRet += n.nom + "|" + n.x + "," + n.y + "|" + n.tot + "," + n.tard;
-					for (Arc a : this.arcs)
-					{
-						if (a.from.equals(n.nom))
-						{
-							sRet += "|" + a.poids + "\n";
-							break;
-						}
-					}
-				}
-			else
+			for (Noeud n : this.noeuds)
 			{
+				sRet += n.nom;
+				//Ajouter les précedents des noeuds 
+				
 				for (Arc a : this.arcs)
 				{
-					Point p1 = new Point();
-					Point p2 = new Point();
-					for (Noeud n : this.noeuds)
+					if (a.from.equals(n.nom))
 					{
-						if (n.nom.equals(a.from))
+						sRet += "|" + a.poids;
+						break;
+					}
+				}
+				sRet += "|";
+				//les precedents
+				for (Tache t : ctrl.getTaches())
+				{
+					if (t.getNom().equals(n.nom))
+					{
+						for (Tache tPre : t.getPrecedents())
 						{
-							p1.x = n.x;
-							p1.y = n.y;
-						}
-						if (n.nom.equals(a.to))
-						{
-							p2.x = n.x;
-							p2.y = n.y;
-							sRet += p1.x + "," + p1.y + "|" + p2.x + "," + p2.y + "|" + a.poids + "\n";
+							sRet += tPre.getNom()  + ",";
 						}
 					}
 				}
+				//enlèver le dernier ,
+				sRet = sRet.substring(0, sRet.length() - 1);
+				sRet += "|" + n.x + "," + n.y + "\n";
 			}
 			return sRet;
         }
+
+		private class GereSouris extends MouseAdapter
+		{
+			public void mousePressed(MouseEvent e)
+			{
+				// Chercher le nœud cliqué
+				noeudSelectionne = getNoeudAPosition(e.getX(), e.getY());
+				
+				if (noeudSelectionne != null)
+				{
+					if (SwingUtilities.isRightMouseButton(e)) {
+						afficherInfosNoeud(noeudSelectionne);
+					} else {
+						// Calculer l'offset pour un déplacement fluide
+						offsetX = e.getX() - noeudSelectionne.x;
+						offsetY = e.getY() - noeudSelectionne.y;
+					}
+				}
+			}
+				
+			public void mouseReleased(MouseEvent e)
+			{
+				noeudSelectionne = null;
+			}
+			
+			public void mouseDragged(MouseEvent e)
+			{
+				if (noeudSelectionne != null)
+				{
+					// Mettre à jour les coordonnées du nœud
+					noeudSelectionne.x = e.getX() - offsetX;
+					noeudSelectionne.y = e.getY() - offsetY;
+					
+					repaint();
+				}
+			}
+	}
 }
