@@ -234,11 +234,13 @@ public class Mpm
 
 
 		
-		if (bRet && ant != null && !ant.trim().isEmpty()) {
+		if (bRet && ant != null && !ant.trim().isEmpty()) 
+		{
 			String nomTacheActuelle = (nom != null) ? nom.trim() : "";
 			String[] antecedents = ant.trim().split(",");
 
-			for (String unAntecedent : antecedents) {
+			for (String unAntecedent : antecedents) 
+			{
 				unAntecedent = unAntecedent.trim();
 				if (unAntecedent.isEmpty()) continue; // Ignorer les virgules en trop (ex: "A,,B")
 
@@ -276,19 +278,8 @@ public class Mpm
 					return false;
 				}
 
-				// 5. Dépendance cyclique (plus complexe)
 			}
-		} 
-		// else if (ant != null && !ant.trim().isEmpty() && !bRet) 
-		// {
-		// 	// Si bRet est déjà faux à cause du nom ou de la durée,
-		// 	// on peut quand même mentionner que les prédécesseurs n'ont pas été vérifiés en détail.
-		// 	// this.msgErreur += "Validation des prédécesseurs sautée car le nom ou la durée de la tâche est invalide.\n";
-		// }
-
-
-
-
+		}
 
 		return bRet;
 	}
