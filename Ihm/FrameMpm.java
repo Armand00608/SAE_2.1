@@ -19,13 +19,19 @@ public class FrameMpm extends JFrame
 		this.setSize(1000, 700);
 		this.setLayout(new BorderLayout());
 
+	
 		this.graphPanel = new MPMGrapheAuto(ctrl);
-		this.add(this.graphPanel, BorderLayout.CENTER);
+		JScrollPane scrollFrame = new JScrollPane(this.graphPanel,
+		                                          JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+		                                          JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
+		this.add(scrollFrame, BorderLayout.CENTER);
 
 		JMenuBar menubMaBarre = new BarreMenu(this.ctrl);
 		this.setJMenuBar( menubMaBarre );
 
 		this.btnPanel = new BtnPanel(this.graphPanel);
+		this.btnPanel.setVisible(false);
 		this.add(this.btnPanel, BorderLayout.SOUTH);
 
 		this.setVisible(true);
@@ -33,10 +39,14 @@ public class FrameMpm extends JFrame
 
 	public void majIhm(){this.graphPanel.majIhm();}
 
+	public void enableBtn(){this.btnPanel.setVisible(true);}
+
 	public String getInfos()
 	{
 		return this.graphPanel.getInfos();
 	}
+
+	
 
 	public MPMGrapheAuto getMpmGraphe() {return this.graphPanel;}
 	public BtnPanel      getBtnPanel () {return this.btnPanel  ;}

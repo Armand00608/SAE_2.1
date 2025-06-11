@@ -7,6 +7,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -199,10 +201,10 @@ public class Mpm
 			this.taches.add(tNew);
 
 			// Calculer les dates au plus tôt et au plus tard
-			this.calculerDates();
+			calculerDates();
 
 			//Creer le(s) chemin(s) critique(s)
-			this.creerCheminCritique();
+			creerCheminCritique();
 
 		}
 
@@ -458,14 +460,11 @@ public boolean enregistrer(String infosNoeuds, String cheminAbsolu)
 				ligneEnCours = sc.nextLine().trim();
 				if (!ligneEnCours.isEmpty())
 				{
-
 					String[] partsBruts = ligneEnCours.split("\\|");
-
 
 					if (partsBruts.length >= 2)
 					{
 						String nomTache = partsBruts[0].trim();
-
 						int duree = Integer.parseInt(partsBruts[1].trim());
 
 						Tache t = new Tache(nomTache, duree);
@@ -478,7 +477,6 @@ public boolean enregistrer(String infosNoeuds, String cheminAbsolu)
 
 			this.taches.add(0, new Tache("Debut", 0));
 			this.taches.add(new Tache("Fin", 0));
-
 
 			// Deuxième passe : Ajouter les dépendances entre les tâches
 			for (String[] parts : lignesPourDependances)
@@ -497,7 +495,6 @@ public boolean enregistrer(String infosNoeuds, String cheminAbsolu)
 				}
 			}
 
-
 			for (Tache t : this.taches)
 			{
 				if (t.getPrecedents().isEmpty() && !t.getNom().equals("Fin") && !t.getNom().equals("Debut"))
@@ -511,19 +508,91 @@ public boolean enregistrer(String infosNoeuds, String cheminAbsolu)
 				}
 			}
 
+			// Tri  pour ordonner correctement les tâches
+			tri();
+
 			// Calculer les dates au plus tôt et au plus tard
 			calculerDates();
 
 			//Creer le(s) chemin(s) critique(s)
 			creerCheminCritique();
-
-
 		}
 		catch (Exception e)
 		{
 			System.out.println("Erreur lecture fichier : " + e.getMessage());
-			// e.printStackTrace();
 		}
+	}
+
+
+	public void tri()
+	{
+		HashMap<Tache, Integer> dicTaches = new HashMap<>();
+		
+		// Première étape : calculer les niveaux (indices) de chaque tâche
+		while(dicTaches.size() != taches.size())
+		{
+			for (Tache t : taches)
+			{
+				// Si la tâche n'est pas encore dans le dictionnaire
+				if (!dicTaches.containsKey(t))
+				{
+					int colPlusGrd = -1;
+					
+					if (t.getPrecedents().isEmpty())
+					{
+						dicTaches.put(t, 0);
+					}
+					else
+					{
+						// Vérifier si tous les précédents ont déjà un niveau assigné
+						boolean tousPrecsTraites = true;
+						for (Tache pred : t.getPrecedents())
+						{
+							if (!dicTaches.containsKey(pred))
+							{
+								tousPrecsTraites = false;
+								break;
+							}
+							
+							int niveauPred = dicTaches.get(pred);
+							if (niveauPred + 1 > colPlusGrd)
+								colPlusGrd = niveauPred + 1;
+						}
+						
+						// Ne l'ajouter que si tous ses précédents sont traités
+						if (tousPrecsTraites && colPlusGrd != -1)
+						{
+							dicTaches.put(t, colPlusGrd);
+						}
+					}
+				}
+			}
+		}
+		
+		// Deuxième étape : trier les tâches par leur niveau
+		ArrayList<Tache> tachesTriees = new ArrayList<>();
+		
+		// Trouver le niveau maximum
+		int niveauMax = 0;
+		for (int niveau : dicTaches.values())
+		{
+			if (niveau > niveauMax)
+				niveauMax = niveau;
+		}
+		
+		// Ajouter les tâches niveau par niveau (0, puis 1, puis 2, etc.)
+		for (int niveau = 0; niveau <= niveauMax; niveau++)
+		{
+			for (Tache t : taches)
+			{
+				if (dicTaches.get(t) == niveau)
+				{
+					tachesTriees.add(t);
+				}
+			}
+		}
+		
+		this.taches = tachesTriees;
 	}
 
 	// Affichage des résultats

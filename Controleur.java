@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 
 public class Controleur
+
 {
 	private  Mpm      metier;
 	private  FrameMpm ihm;
@@ -20,11 +21,13 @@ public class Controleur
 	public void setNouvMetier(String fichier)
 	{
 		this.metier = new Mpm(fichier,"02/06/2025");
+		this.ihm.enableBtn();
 		
 		this.majIhm();
 
 		ihm.getMpmGraphe().resetEtape();
 		ihm.getBtnPanel ().resetBtn  ();
+
 	}
 
 	public ArrayList<Tache>          getTaches()                                        {return metier.getTaches();               }
