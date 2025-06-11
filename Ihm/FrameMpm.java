@@ -1,4 +1,4 @@
-package exFinal.Ihm;
+package Ihm;
 import exFinal.Controleur;
 import java.awt.*;
 import javax.swing.*;
@@ -37,4 +37,7 @@ public class FrameMpm extends JFrame
 	{
 		return this.graphPanel.getInfos();
 	}
+
+	public MPMGrapheAuto getMpmGraphe() {return this.graphPanel;}
+	public BtnPanel      getBtnPanel () {return this.btnPanel  ;}
 }

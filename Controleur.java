@@ -1,20 +1,30 @@
 package exFinal;
-import exFinal.Ihm.FrameMpm;
-import exFinal.Metier.CheminCritique;
-import exFinal.Metier.Mpm;
-import exFinal.Metier.Tache;
+import Ihm.FrameMpm;
+import Metier.CheminCritique;
+import Metier.Mpm;
+import Metier.Tache;
 import java.util.ArrayList;
 
 
 public class Controleur
 {
-	private Mpm metier;
-	private FrameMpm ihm;
+	private  Mpm      metier;
+	private  FrameMpm ihm;
 
 	public Controleur() 
 	{
-		this.metier = new Mpm("./test/test.txt", "02/06/2024");
+		this.metier = new Mpm();
 		this.ihm    = new FrameMpm(this);
+	}
+
+	public void setNouvMetier(String fichier)
+	{
+		this.metier = new Mpm(fichier,"02/06/2025");
+		
+		this.majIhm();
+
+		ihm.getMpmGraphe().resetEtape();
+		ihm.getBtnPanel ().resetBtn  ();
 	}
 
 	public ArrayList<Tache>          getTaches()                                        {return metier.getTaches();               }
@@ -24,9 +34,12 @@ public class Controleur
 	public String                    getDateDebut()                                     {return this.metier.getDateDebut();       }
 	public String                    getErreur()                                        {return this.metier.getErreur();          }
 	
-	public boolean valeursValides(String nom, String duree, String ant)                 {return this.metier.valeursValides(nom, duree, ant);}
-	public void    ajouterTache  (String nom, String prc, String duree)                 {this.metier.ajouterTache(nom, prc, duree);}
-
+	public boolean valeursValides (String nom, String duree, String ant, String svt)    {return this.metier.valeursValides(nom, duree, ant, svt);}
+	public void    ajouterTache   (String nom, String prc  , String svt, int duree )    {this.metier.ajouterTache(nom, prc,svt, duree);          }
+	public void    supprimerTache (String nom)                                          {this.metier.supprimerTache(nom);                        }
+	
+	public void    dispose        ()                                                    {this.ihm.dispose();}
+	
 	public boolean enregistrer(String cheminAbsolue) 
 	{
 		String infosNoeuds;
@@ -34,6 +47,12 @@ public class Controleur
 		infosNoeuds = this.ihm.getInfos();
 
 		return this.metier.enregistrer(infosNoeuds, cheminAbsolue);
+	}
+
+	public void setDure(int val, Tache tache)
+	{
+		this.metier.setDure(val, tache);
+		this.majIhm();
 	}
 
 	public static void main(String[] args)

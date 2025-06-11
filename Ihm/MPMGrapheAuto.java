@@ -1,12 +1,12 @@
-package exFinal.Ihm;
-
+package Ihm;
+import Metier.CheminCritique;
+import Metier.Tache;
 import exFinal.Controleur;
-import exFinal.Metier.CheminCritique;
-import exFinal.Metier.Tache;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import javax.swing.*;
@@ -41,6 +41,7 @@ import javax.swing.*;
 		 */
 		public MPMGrapheAuto(Controleur ctrl)
 		{
+			this.nbCol           =  0;
 			this.etapePlusTarMax = -1;
 			this.etapePlusTotMax =  1;
 			this.ctrl            =  ctrl;
@@ -48,7 +49,7 @@ import javax.swing.*;
 
 			this.majIhm();
 
-			this.etapePlusTarMax = this.nbCol;
+			resetEtape();
 			
 			// Ajoute des listeners
 			GereSouris GereSouris = new GereSouris();
@@ -64,8 +65,8 @@ import javax.swing.*;
 		{
 			for (Noeud n : noeuds)
 			{
-				if (x >= n.x && x <= n.x + boxSize && 
-					y >= n.y && y <= n.y + boxSize)
+				if (x >= n.getX() && x <= n.getX() + boxSize &&
+					y >= n.getY() && y <= n.getY() + boxSize)
 				{
 					return n;
 				}
@@ -76,8 +77,11 @@ import javax.swing.*;
 		public void majIhm()
 		{
 			this.cheminsCritiques = this.ctrl.getCheminCritiques();
+
 			this.initialiserNoeudsArcs();
+
 			this.creerGraphe();
+
 
 			if (this.etapePlusTotMax == this.nbCol )
 				this.etapePlusTotMax = this.nbCol + 1;
@@ -96,10 +100,13 @@ import javax.swing.*;
 			ArrayList<Tache> taches  = new ArrayList<>(this.ctrl.getTaches());
 			HashMap<String, Integer> dicTaches = new HashMap<>();
 
-			while(dicTaches.size() != taches.size())
+			dicTaches.clear();
+
+			while(dicTaches.size() != taches.size())//boucle infini
 			{
 				for (Tache t : taches)
 				{
+
 					int colPlusGrd = -1;
 
 					if (t.getPrecedents().isEmpty())
@@ -110,6 +117,7 @@ import javax.swing.*;
 					{
 						for (Tache pred : t.getPrecedents())
 						{
+							
 							String nomTache = pred.getNom();
 							if(dicTaches.containsKey(nomTache) && dicTaches.get(nomTache)+1 > colPlusGrd)
 								colPlusGrd = dicTaches.get(nomTache)+1;
@@ -126,12 +134,15 @@ import javax.swing.*;
 
 			for (Tache t : taches)
 			{
-				Noeud n = new Noeud(t.getNom(), t.getDatePlusTot(), t.getDatePlusTard(), dicTaches.get(t.getNom()), false);
+
+				Noeud n = new Noeud(t.getNom(), t.getDatePlusTot(), t.getDatePlusTard(), dicTaches.get(t.getNom()), false, ctrl);
 				noeuds.add(n);
 				for (CheminCritique ch : this.cheminsCritiques)
 				{
+
 					for (Tache tacheCh : ch.getTachesCritiques())
 					{
+
 						if (tacheCh.getNom().equals(t.getNom()))
 						{
 							n.setEstChemin(true);
@@ -141,6 +152,7 @@ import javax.swing.*;
 
 				for (Tache tachePrc : t.getPrecedents())
 				{
+
 					arcs.add(new Arc(tachePrc.getNom(), t.getNom(), tachePrc.getDuree()));
 				}
 			}
@@ -150,43 +162,273 @@ import javax.swing.*;
 		 * Place les nœuds horizontalement selon leur date au plus tôt,
 		 * et verticalement pour éviter les chevauchements.
 		 */
-		private void creerGraphe()
+		private void creerGraphe() 
 		{
-			int startX = 100;
-			int startY = 100;
-			int distX  = boxSize + 60;
-			int distY  = boxSize + 40;
+			int startX = 5;
+			int startY = 375; // <- Ta demande
+			int distX = boxSize + 100;
+			int distY = boxSize;
 
-			// 1. Trouver la colonne maximale
-			int maxCol = 0;
-			for (Noeud n : noeuds)
-				if (n.col > maxCol)
-					maxCol = n.col;
+			// Construction du dictionnaire colonne -> nœuds
+			HashMap<Integer, ArrayList<Noeud>> dicColNoeud = new HashMap<>();
 
-			// 2. Initialiser compteur de lignes par colonne
-			List<Integer> compteurLignes = new ArrayList<>();
-			for (int i = 0; i <= maxCol; i++)
-				compteurLignes.add(0);
-
-			// 3. Positionner les noeuds
-			for (Noeud n : noeuds)
+			for (int col = 0; col < nbCol; col++)
 			{
-				int col = n.col;
-				int ligne = compteurLignes.get(col);
-
-				n.x = startX + col * distX;
-				n.y = startY + ligne * distY;
-
-				compteurLignes.set(col, ligne + 1); // mettre à jour le compteur
+				ArrayList<Noeud> ListNoeudDsCol = new ArrayList<>();
+				for (Noeud n : noeuds) 
+				{
+					if (n.getCol() == col)
+						ListNoeudDsCol.add(n);
+				}
+				dicColNoeud.put(col,ListNoeudDsCol);	
 			}
+
+			// Calcul des 'lig' pour chaque colonne
+			for (Integer col : dicColNoeud.keySet())
+			{
+				ArrayList<Noeud> lstCol       = dicColNoeud.get(col);
+				ArrayList<Noeud> lstNGrpFait  = new ArrayList<>();
+				
+				if (col == 0)
+						lstCol.get(0).setLig(0);
+				else
+				{
+					// tri des nœuds de la colonne col
+        			ArrayList<Noeud> lstColOrga = triCol(col, dicColNoeud);
+					int cptSup = 0;
+					int cptInf = 0;
+
+					for (Noeud n : lstColOrga)
+					{
+						System.out.println(n.getNom());
+            			ArrayList<Noeud> lstNSvtDePre = new ArrayList<>();
+
+						ArrayList<Noeud> lstNoeudPreActuel  = getPrecedents(n);
+
+						for (Noeud nPreActuel : lstNoeudPreActuel)
+							lstNSvtDePre = getNoeudsMemeSvt(nPreActuel, lstNSvtDePre, lstNoeudPreActuel);
+						
+						if(estNewGrp(lstNSvtDePre,lstNGrpFait,col))
+						{
+							cptSup = -1;
+							for (Noeud nGrp : lstNSvtDePre)
+							{
+								if (nGrp.getCol() == col)
+									cptInf ++;
+							}
+							cptInf = (int) Math.ceil(cptInf/2);
+							
+						}
+						
+						System.out.println("cptInf : " + cptInf);
+
+						if (!lstNSvtDePre.isEmpty()) 
+						{
+							int milieu = 0;
+
+							 // 4) position de n dans la liste
+							int emplacementN = lstNSvtDePre.indexOf(n);
+							double tailleGrpDeN = lstNSvtDePre.size();
+
+							int lig = 0;
+							if (lstNSvtDePre.size()%2 != 0)
+							{
+								if ( n == lstNSvtDePre.get((int)tailleGrpDeN/2))
+								{
+									if (n.getNbPre()%2 == 0)
+										milieu += getMil(n);
+									else
+										milieu += getMilieu(getPrecedents(n));
+									lig += milieu;
+									System.out.println("Noeud : " + n.getNom());
+									System.out.println("Lig = " + lig + " = " + milieu +"/2\n");
+								}
+								else
+								{
+									if (emplacementN > Math.ceil(tailleGrpDeN/2))
+									{
+										System.out.println("hihihihihih");
+										lig += getMilieu(getPrecedents(n)) + (((emplacementN+1) - Math.ceil(tailleGrpDeN/2)) + cptSup++);
+									}
+									else
+									{
+										System.out.println("ohohoohohoho");
+										lig += getMilieu(getPrecedents(n)) + (((emplacementN+1) - Math.ceil(tailleGrpDeN/2)) - cptInf--);
+									}
+									System.out.println("Noeud : " + n.getNom());
+									System.out.println("Lig = " + lig + " = " + getMilieu(getPrecedents(n)) + "+ (((" + emplacementN+"+1)" +" - "+ Math.ceil(tailleGrpDeN/2)+") - "+ cptInf-- +")");
+									System.out.println("cptInf : "+ cptInf);
+									System.out.println("cptSup : "+ cptSup  + "\n");
+								}
+							}
+							else
+							{
+								if (emplacementN >= tailleGrpDeN/2)
+								{	
+									lig += getMil(n) + ((emplacementN - (tailleGrpDeN/2)) + ++cptSup) + 1;
+								}
+								else
+								{
+									lig += getMil(n) + ((emplacementN - (tailleGrpDeN/2)) - --cptInf) ;
+								}
+								System.out.println("Noeud : " + n.getNom());
+								System.out.println("Lig = " + lig + " = " + getMil(n) + " - (" + emplacementN +" - ("+ tailleGrpDeN/2 + "))");
+							}
+
+							lstNGrpFait.add(n);
+							
+							n.setLig(lig);
+						}
+						
+					}
+				}
+			}
+
+			// Affectation des coordonnées x/y pour l'affichage
+			for (Noeud n : noeuds) 
+			{
+				int x = startX + n.getCol() * distX;
+				int y = startY + n.getLig() * distY;
+				n.setX(x);
+				n.setY(y);
+			}
+
+		}
+
+		//doit renvoyer vrais si dans lstGrpFait il y a tous les noeuds de lstNGrp dans la colonne indiqué
+		public boolean estNewGrp(ArrayList<Noeud> lstNGrp, ArrayList<Noeud> lstNGrpFait, int col) 
+		{
+			for (Noeud n : lstNGrp) 
+			{
+				if (n.getCol() == col && lstNGrpFait.contains(n)) 
+					return false;
+			}
+			return true;
+		}
+
+		public ArrayList<Noeud> triCol(int colActuel, HashMap<Integer, ArrayList<Noeud>> dicColNoeud)
+		{
+			ArrayList<Noeud> noeudsActuels    = dicColNoeud.get(colActuel);
+
+			for (int i = 0; i < noeudsActuels.size() - 1; i++)
+			{
+				if (i % 2 == 0)
+				{
+					// Si position paire, list[i] doit être < list[i+1]
+					if (noeudsActuels.get(i).getNbPre() > noeudsActuels.get(i + 1).getNbPre())
+						Collections.swap(noeudsActuels, i, i + 1);
+				}
+				else
+				{
+					// Si position impaire, list[i] doit être > list[i+1]
+					if (noeudsActuels.get(i).getNbPre() < noeudsActuels.get(i + 1).getNbPre())
+						Collections.swap(noeudsActuels, i, i + 1);
+				}
+			}
+
+			for (int i = 0; i < noeudsActuels.size() - 1; i++)
+			{
+
+				int milieu1 = getMil(noeudsActuels.get(i));
+				int milieu2 = getMil(noeudsActuels.get(i + 1));
+
+				if (milieu2 < milieu1)
+					Collections.swap(noeudsActuels, i, i + 1);
+			}
+
+			return noeudsActuels;
+		}
+
+		private int getMil(Noeud n)
+		{
+			int sumLig  = 0;
+			for (Noeud nPreActuel : getPrecedents(n))
+				sumLig  += nPreActuel.getLig();
+			return sumLig/getPrecedents(n).size();
+		}
+
+		private int getMilieu(ArrayList<Noeud> lstNoeudPreActuel)
+		{
+			if (lstNoeudPreActuel == null || lstNoeudPreActuel.isEmpty())
+				return 0;
+
+			// Étape 1 : copier et trier manuellement la liste par insertion
+			ArrayList<Noeud> copieTriee = new ArrayList<>();
+
+			for (Noeud n : lstNoeudPreActuel)
+			{
+				int i = 0;
+				while (i < copieTriee.size() && n.getLig() > copieTriee.get(i).getLig()) 
+				{
+					i++;
+				}
+				copieTriee.add(i, n); // insertion à la bonne position
+			}
+
+			// Étape 2 : trouver l'élément du milieu
+			int indexMilieu = copieTriee.size() / 2;
+
+			int i = 0;
+			for (Noeud n : copieTriee) 
+			{
+				if (i == indexMilieu) 
+				{
+					return n.getLig();
+				}
+				i++;
+			}
+
+			return 0; // fallback (ne devrait jamais arriver)
 		}
 
 
-		public ArrayList<Noeud> getNoeudsMemeSvt(Noeud n, ArrayList<Noeud> lstNSvt, ArrayList<Noeud> lstPre) 
+		private ArrayList<Noeud> getSuivants(Noeud n)
+		{
+			Tache t = ctrl.chercherTacheParNom(n.getNom());
+			ArrayList<Tache> lstTSvt = t.getSuivants();
+			ArrayList<Noeud> lstNSvt = new ArrayList<>();
+
+			for (Tache tSvt : lstTSvt)
+			{
+				lstNSvt.add(getNoeud(tSvt.getNom()));
+			}
+
+			return lstNSvt;
+		}
+
+		private ArrayList<Noeud> getPrecedents(Noeud n)
+		{
+			Tache t = ctrl.chercherTacheParNom(n.getNom());
+			ArrayList<Tache> lstTPre = t.getPrecedents();
+			ArrayList<Noeud> lstNPre = new ArrayList<>();
+
+			for (Tache tSvt : lstTPre)
+			{
+				lstNPre.add(getNoeud(tSvt.getNom()));
+			}
+
+			return lstNPre;
+		}
+
+		/**
+		 * Retourne le nœud par son nom.
+		 */
+		private Noeud getNoeud(String nom)
+		{
+			for (Noeud n : noeuds)
+			{
+				if (n.getNom().equals(nom))
+					return n;
+			}
+			return null;
+		}
+
+		public ArrayList<Noeud> getNoeudsMemeSvt(Noeud n, ArrayList<Noeud> lstNSvt, ArrayList<Noeud> lstPre)
 		{
 			ArrayList<Tache> lstTSvt = ctrl.chercherTacheParNom(n.getNom()).getSuivants();
 
-			for (Tache tacheSvt : lstTSvt) {
+			for (Tache tacheSvt : lstTSvt) 
+			{
 				Noeud noeudSvt = getNoeud(tacheSvt.getNom());
 
 				// Obtenir les prédécesseurs du suivant
@@ -207,8 +449,7 @@ import javax.swing.*;
 			return lstNSvt;
 		}
 
-
-		private boolean contientTous(ArrayList<Noeud> conteneur, ArrayList<Noeud> contenu) 
+		private boolean contientTous(ArrayList<Noeud> conteneur, ArrayList<Noeud> contenu)
 		{
 			for (Noeud n : contenu) {
 				if (!conteneur.contains(n)) {
@@ -222,107 +463,116 @@ import javax.swing.*;
 		 * Affiche le graphe (arcs et nœuds) dans la fenêtre graphique.
 		 */
 		protected void paintComponent(Graphics g)
-        {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g;
-            g2.setFont(new Font("SansSerif", Font.PLAIN, 14));
+		{
+			super.paintComponent(g);
+			Graphics2D g2 = (Graphics2D) g;
+			g2.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
-            for (Arc arc : arcs)
-            {
-                Noeud noeudDepart  = getNoeud(arc.from);
-                Noeud noeudArrivee = getNoeud(arc.to);        
+			for (Arc arc : arcs)
+			{
+				Noeud noeudDepart  = getNoeud(arc.from);
+				Noeud noeudArrivee = getNoeud(arc.to);
 
-                int x1 = noeudDepart.x  + boxSize;
-                int y1 = noeudDepart.y  + boxSize / 2;
+				int x1 = noeudDepart .getX()  + boxSize;
+				int y1 = noeudDepart .getY()  + boxSize / 2;
 
-                int x2 = noeudArrivee.x;
-                int y2 = noeudArrivee.y + boxSize / 2;
+				int x2 = noeudArrivee.getX();
+				int y2 = noeudArrivee.getY()  + boxSize / 2;
 
-                // Point du milieu
-                int milieuX = (x1 + x2) / 2;
-                int milieuY = (y1 + y2) / 2;
-                
-                // Calculer la direction de la ligne
-                double deltaX = x2 - x1;
-                double deltaY = y2 - y1;
-                double longueur = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                
-                // Direction unitaire
-                double directionX = deltaX / longueur;
-                double directionY = deltaY / longueur;
-                
-                // Espace avant et après le texte
-                int espace = 10;
-                
-                // Premier bout de ligne (s'arrête avant le texte)
-                int arretX = (int)(milieuX - espace * directionX);
-                int arretY = (int)(milieuY - espace * directionY);
-                
-                // Deuxième bout de ligne (reprend après le texte)
-                int repriseX = (int)(milieuX + espace * directionX);
-                int repriseY = (int)(milieuY + espace * directionY);
+				// Point du milieu
+				int milieuX = (x1 + x2) / 2;
+				int milieuY = (y1 + y2) / 2;
 
-                g2.setColor(Color.BLUE);
-                // Première ligne
-                g2.drawLine(x1, y1, arretX, arretY);
-                // Deuxième ligne
-                g2.drawLine(repriseX, repriseY, x2, y2);
-                
-                // Texte au milieu
-                g2.setColor(new Color(201, 87, 30));
-                g2.drawString(String.valueOf(arc.poids), milieuX - 5, milieuY + 5);
-                
-                // Flèche
-                drawArrowHead(g2, repriseX, repriseY, x2, y2);
-                g2.setColor(Color.BLACK);
-            }
-            for (Noeud n : this.noeuds)
-            {
-                if (n.estChemin && this.cheminActif)
-                {
-                    g2.setColor(Color.GRAY);
-                    g2.fillRect(n.x, n.y, boxSize, boxSize);
-                }
-                g2.setColor(Color.BLACK);
+				// Calculer la direction de la ligne
+				double deltaX = x2 - x1;
+				double deltaY = y2 - y1;
+				double longueur = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-                g2.drawRect(n.x, n.y, boxSize, boxSize);
-                g2.drawLine(n.x, n.y + boxSize / 2, n.x + boxSize, n.y + boxSize / 2);
-                g2.drawLine(n.x + boxSize / 2, n.y + boxSize / 2, n.x + boxSize / 2, n.y + boxSize);
+				// Direction unitaire
+				double directionX = deltaX / longueur;
+				double directionY = deltaY / longueur;
 
-                FontMetrics fm = g2.getFontMetrics();
-                int textWidth = fm.stringWidth(n.nom);
-                g2.drawString(n.nom, n.x + (boxSize - textWidth) / 2, n.y + 20);
-                
-            }
+				// Espace avant et après le texte
+				int espace = 10;
 
-            
-                for (Noeud n : this.noeuds) 
-                {
-                    
-                    //Affichage au Plus tot
-                    if (n.col < this.etapePlusTotMax) 
-                    {
-                        g2.setColor  (new Color(30, 189, 120));
-                        g2.drawString(String.valueOf(n.tot), n.x + 15, n.y + boxSize - 10);
-                    }
-                    
-                    //Affichage au Plus tard
-                    g2.setColor  (Color.RED);
-                    if (n.col > this.etapePlusTarMax ) 
-                    {
-                        g2.drawString(String.valueOf(n.tard), n.x + boxSize - 25, n.y + boxSize - 10);
-                        
-                    }                    
-                }
-                
-                g2.setColor  (Color.BLACK);
+				// Premier bout de ligne (s'arrête avant le texte)
+				int arretX = (int)(milieuX - espace * directionX);
+				int arretY = (int)(milieuY - espace * directionY);
 
-        }
+				// Deuxième bout de ligne (reprend après le texte)
+				int repriseX = (int)(milieuX + espace * directionX);
+				int repriseY = (int)(milieuY + espace * directionY);
+
+				g2.setColor(Color.BLUE);
+				// Première ligne
+				g2.drawLine(x1, y1, arretX, arretY);
+				// Deuxième ligne
+				g2.drawLine(repriseX, repriseY, x2, y2);
+
+				// Texte au milieu
+				g2.setColor(new Color(201, 87, 30));
+				g2.drawString(String.valueOf(arc.poids), milieuX - 5, milieuY + 5);
+
+				// Flèche
+				drawArrowHead(g2, repriseX, repriseY, x2, y2);
+				g2.setColor(Color.BLACK);
+			}
+			for (Noeud n : this.noeuds)
+			{
+				/*
+				 * Dessin du rectangle
+				 */
+				g2.setColor(Color.WHITE);
+				g2.fillRect(n.getX(), n.getY(), boxSize, boxSize); // fond blanc
+				g2.setColor(Color.BLACK);
+
+				//Affichage du Chemin Critique
+				if (n.getEstChemin() && this.cheminActif)
+				{
+					g2.setColor(Color.GRAY);
+					g2.fillRect(n.getX(), n.getY(), boxSize, boxSize);
+				}
+				g2.setColor(Color.BLACK);
+
+				g2.drawRect(n.getX(), n.getY(), boxSize, boxSize);
+				g2.drawLine(n.getX(), n.getY() + boxSize / 2, n.getX() + boxSize, n.getY() + boxSize / 2);
+				g2.drawLine(n.getX() + boxSize / 2, n.getY() + boxSize / 2, n.getX() + boxSize / 2, n.getY() + boxSize);
+
+				//Dessin du Nom
+				FontMetrics fm = g2.getFontMetrics();
+				int textWidth = fm.stringWidth(n.getNom());
+				g2.drawString(n.getNom(), n.getX() + (boxSize - textWidth) / 2, n.getY() + 20);
+
+			}
+
+			
+				for (Noeud n : this.noeuds) 
+				{
+					
+					//Affichage au Plus tot
+					if (n.getCol() < this.etapePlusTotMax) 
+					{
+						g2.setColor  (new Color(30, 189, 120));
+						g2.drawString(String.valueOf(n.getTot()), n.getX() + 15, n.getY() + boxSize - 10);
+					}
+					
+					//Affichage au Plus tard
+					g2.setColor  (Color.RED);
+					if (n.getCol() > this.etapePlusTarMax ) 
+					{
+						g2.drawString(String.valueOf(n.getTard()), n.getX() + boxSize - 25, n.getY() + boxSize - 10);
+						
+					}					
+				}
+				
+				g2.setColor  (Color.BLACK);
+
+		}
 
 		public void activerChemin() 
 		{
 			this.cheminActif = !cheminActif;
-			repaint(); // Redessine le panell
+			repaint(); // Redessine le panel
 		}
 
 		public boolean  AugmenterEtapePlusTotMax()
@@ -339,6 +589,7 @@ import javax.swing.*;
 		
 		public boolean AugmenterEtapePlusTarMax()
 		{
+			if (etapePlusTarMax > this.nbCol) this.etapePlusTarMax = this.nbCol;
 			this.etapePlusTarMax--;
 			repaint();
 			
@@ -348,18 +599,13 @@ import javax.swing.*;
 			return true;
 		}
 
-		/**
-		 * Retourne le nœud par son nom.
-		 */
-		private Noeud getNoeud(String nom)
+		public void resetEtape() 
 		{
-			for (Noeud n : noeuds)
-			{
-				if (n.nom.equals(nom))
-					return n;
-			}
-			return null;
+			this.etapePlusTarMax = this.nbCol;
+			this.etapePlusTotMax = 1;
+			this.cheminActif     = false;
 		}
+
 
 		/**
 		 * Dessine une flèche orientée entre deux points.
@@ -381,16 +627,12 @@ import javax.swing.*;
 			}
 		}
 
-		private ArrayList<Noeud> getNoeudsSvtDePreActuel(Noeud nPreActuel, ArrayList<Noeud> lstNSvtDePre, List<Noeud> lstNoeudPreActuel) {
-			throw new UnsupportedOperationException("Not supported yet.");
-		}
-
 
 		private void afficherInfosNoeud(Noeud n) 
 		{
 			Tache tache = null;
 			for (Tache t : ctrl.getTaches()) {
-				if (t.getNom().equals(n.nom)) {
+				if (t.getNom().equals(n.getNom())) {
 					tache = t;
 					break;
 				}
@@ -398,7 +640,6 @@ import javax.swing.*;
 			if (tache == null) return;
 
 			FrameNoeudInfo frameInfo = new FrameNoeudInfo(tache, this.ctrl);
-			frameInfo.setVisible(true);
 		}
 
 		public String getInfos() 
@@ -406,12 +647,12 @@ import javax.swing.*;
 			String sRet = "";
 			for (Noeud n : this.noeuds)
 			{
-				sRet += n.nom;
+				sRet += n.getNom();
 				//Ajouter les précedents des noeuds 
 				
 				for (Arc a : this.arcs)
 				{
-					if (a.from.equals(n.nom))
+					if (a.from.equals(n.getNom()))
 					{
 						sRet += "|" + a.poids;
 						break;
@@ -421,7 +662,7 @@ import javax.swing.*;
 				//les precedents
 				for (Tache t : ctrl.getTaches())
 				{
-					if (t.getNom().equals(n.nom))
+					if (t.getNom().equals(n.getNom()))
 					{
 						for (Tache tPre : t.getPrecedents())
 						{
@@ -431,7 +672,7 @@ import javax.swing.*;
 				}
 				//enlèver le dernier ,
 				sRet = sRet.substring(0, sRet.length() - 1);
-				sRet += "|" + n.x + "," + n.y + "\n";
+				sRet += "|" + n.getX() + "," + n.getY() + "\n";
 			}
 			return sRet;
         }
@@ -449,8 +690,8 @@ import javax.swing.*;
 						afficherInfosNoeud(noeudSelectionne);
 					} else {
 						// Calculer l'offset pour un déplacement fluide
-						offsetX = e.getX() - noeudSelectionne.x;
-						offsetY = e.getY() - noeudSelectionne.y;
+						offsetX = e.getX() - noeudSelectionne.getX();
+						offsetY = e.getY() - noeudSelectionne.getY();
 					}
 				}
 			}
@@ -459,17 +700,17 @@ import javax.swing.*;
 			{
 				noeudSelectionne = null;
 			}
-			
+
 			public void mouseDragged(MouseEvent e)
 			{
-				if (noeudSelectionne != null)
+				if (noeudSelectionne != null && SwingUtilities.isLeftMouseButton(e))
 				{
 					// Mettre à jour les coordonnées du nœud
-					noeudSelectionne.x = e.getX() - offsetX;
-					noeudSelectionne.y = e.getY() - offsetY;
-					
+					noeudSelectionne.setX(e.getX() - offsetX);
+					noeudSelectionne.setY(e.getY() - offsetY);
+
 					repaint();
 				}
 			}
-	}
+		}
 }

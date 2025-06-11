@@ -1,4 +1,5 @@
-package exFinal.Metier;
+package Metier;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,16 +18,24 @@ public class Mpm
 	private String dateDebut;
 	private String nomFichier;
 	private String msgErreur;
-
+	
 	// Constructeur : charge le fichier et initialise les tâches
-	public Mpm(String nomFichier, String dateDebut) 
+	public Mpm() 
+	{
+		this.cheminsCritiques = new ArrayList<CheminCritique>();
+		this.taches = new ArrayList<Tache>();
+	}
+
+
+	public Mpm(String nomFichier, String dateDebut)
 	{
 		this.dateDebut = dateDebut;
 		this.nomFichier = nomFichier;
-		
+		this.cheminsCritiques = new ArrayList<CheminCritique>();
+		this.taches = new ArrayList<Tache>();
+
 		this.chargerFichier();
 	}
-
 
 	private static class EtatExploration 
 	{
@@ -43,50 +52,50 @@ public class Mpm
 
 	private void creerCheminCritique() 
 	{
-	    this.cheminsCritiques.clear();
-	    Tache tacheDebut = chercherTacheParNom("Debut");
+		this.cheminsCritiques.clear();
+		Tache tacheDebut = chercherTacheParNom("Debut");
 
-	    if (tacheDebut == null || !tacheDebut.estCritique())
-	        return;
+		if (tacheDebut == null || !tacheDebut.estCritique())
+			return;
 
-	    ArrayList<EtatExploration> liste = new ArrayList<>();
-	    ArrayList<Tache> cheminInitial = new ArrayList<>();
-	    cheminInitial.add(tacheDebut);
-	    liste.add(new EtatExploration(tacheDebut, cheminInitial));
+		ArrayList<EtatExploration> liste = new ArrayList<>();
+		ArrayList<Tache> cheminInitial = new ArrayList<>();
+		cheminInitial.add(tacheDebut);
+		liste.add(new EtatExploration(tacheDebut, cheminInitial));
 
-	    while (!liste.isEmpty()) 
-	    {
-	        EtatExploration etatCourant = liste.remove(liste.size() - 1); // Équivalent de pop()
-	        Tache tacheActuelle = etatCourant.tacheActuelle;
-	        ArrayList<Tache> cheminActuel = etatCourant.cheminJusquaIci;
+		while (!liste.isEmpty()) 
+		{
+			EtatExploration etatCourant = liste.remove(liste.size() - 1); // Équivalent de pop()
+			Tache tacheActuelle = etatCourant.tacheActuelle;
+			ArrayList<Tache> cheminActuel = etatCourant.cheminJusquaIci;
 
-	        if (tacheActuelle.getNom().equals("Fin")) 
-	        {
-	            CheminCritique cTemp = new CheminCritique();
-	            for (Tache t : cheminActuel)
-	                cTemp.ajouterTache(t);
+			if (tacheActuelle.getNom().equals("Fin")) 
+			{
+				CheminCritique cTemp = new CheminCritique();
+				for (Tache t : cheminActuel)
+					cTemp.ajouterTache(t);
 
-	            cTemp.setDureeTotale(tacheActuelle.getDatePlusTot());
-	            this.cheminsCritiques.add(cTemp);
-	        }
-	        else 
-	        {
-	            List<Tache> succCritiques = new ArrayList<>();
-	            for (Tache successeur : tacheActuelle.getSuivants()) 
-	            {
-	                if (successeur.estCritique())
-	                    succCritiques.add(successeur);
-	            }
+				cTemp.setDureeTotale(tacheActuelle.getDatePlusTot());
+				this.cheminsCritiques.add(cTemp);
+			}
+			else 
+			{
+				List<Tache> succCritiques = new ArrayList<>();
+				for (Tache successeur : tacheActuelle.getSuivants()) 
+				{
+					if (successeur.estCritique())
+						succCritiques.add(successeur);
+				}
 
-	            for (int i = succCritiques.size() - 1; i >= 0; i--) 
-	            {
-	                Tache successeur = succCritiques.get(i);
-	                ArrayList<Tache> prochainChemin = new ArrayList<>(cheminActuel);
-	                prochainChemin.add(successeur);
-	                liste.add(new EtatExploration(successeur, prochainChemin));
-	            }
-	        }
-	    }
+				for (int i = succCritiques.size() - 1; i >= 0; i--) 
+				{
+					Tache successeur = succCritiques.get(i);
+					ArrayList<Tache> prochainChemin = new ArrayList<>(cheminActuel);
+					prochainChemin.add(successeur);
+					liste.add(new EtatExploration(successeur, prochainChemin));
+				}
+			}
+		}
 	}
 
 
@@ -102,7 +111,7 @@ public class Mpm
 	}
 
 	// Calculer les dates plus tôt et plus tard pour chaque tâche
-	private void calculerDates() 
+	public void calculerDates() 
 	{
 		// Calculer les dates au plus tôt
 		for (Tache t : this.taches) 
@@ -143,20 +152,128 @@ public class Mpm
 		}
 	}
 
-	public void ajouterTache(String nom, String prc, String duree)
-	{
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(this.nomFichier, true))) {
-			writer.newLine();
-			writer.write(nom + '|' + duree + '|' + prc);
-		} catch (IOException e) {
-			e.printStackTrace();
+	public void ajouterTache(String nom, String prc, String svt, int duree)
+		{
+			Tache tNew  = new Tache(nom, duree);
+
+			// Ajouter les précédents
+			if (prc != null && !prc.trim().isEmpty()) {
+				String[] precedents = prc.split(",");
+				for (String nomPre : precedents) {
+					nomPre = nomPre.trim();
+					if (!nomPre.isEmpty()) {
+						Tache precedent = chercherTacheParNom(nomPre);
+						if (precedent != null) {
+							tNew.ajouterPrecedent(precedent);
+						}
+					}
+				}
+			}
+			else
+			{
+				Tache Debut = chercherTacheParNom("Debut");
+				tNew.ajouterPrecedent(Debut);
+			}
+
+
+			// Ajouter les suivants
+			if (svt != null && !svt.trim().isEmpty()) 
+			{
+				String[] suivants = svt.split(",");
+				for (String nomSvt : suivants) {
+					nomSvt = nomSvt.trim();
+					if (!nomSvt.isEmpty()) {
+						Tache suivant = chercherTacheParNom(nomSvt);
+						if (suivant != null) {
+							tNew.ajouterSuivant(suivant);
+						}
+					}
+				}
+			}
+			else
+			{
+				Tache fin = chercherTacheParNom("Fin");
+				tNew.ajouterSuivant(fin);
+			}
+
+			this.taches.add(tNew);
+
+			// Calculer les dates au plus tôt et au plus tard
+			this.calculerDates();
+
+			//Creer le(s) chemin(s) critique(s)
+			this.creerCheminCritique();
+
 		}
 
-		this.chargerFichier();
-	}
+		public void supprimerTache(String nom) 
+		{
+			Tache t = chercherTacheParNom(nom);
 
+			if (t == null) return;
+
+			Tache tFin   = chercherTacheParNom("Fin");
+			Tache tDebut = chercherTacheParNom("Debut");
+
+			// Retirer la tâche des précédents et suivants de toutes les autres tâches
+			for (Tache t1 : this.taches) {
+				// Supprimer des précédents
+				ArrayList<Tache> precedents = t1.getPrecedents();
+				for (int i = precedents.size() - 1; i >= 0; i--) {
+					if (precedents.get(i).getNom().equals(nom)) {
+						precedents.remove(i);
+					}
+				}
+				// Supprimer des suivants
+				ArrayList<Tache> suivants = t1.getSuivants();
+				for (int i = suivants.size() - 1; i >= 0; i--) {
+					if (suivants.get(i).getNom().equals(nom)) {
+						suivants.remove(i);
+					}
+				}
+			}
+
+			// Pour chaque tâche, si elle n'a plus de suivant et ce n'est pas "Fin" ou "Debut", on lui ajoute "Fin"
+			for (Tache t1 : this.taches) {
+				if (t1.getSuivants().isEmpty() && 
+					!t1.getNom().equals("Fin") && 
+					!t1.getNom().equals("Debut")) {
+					t1.ajouterSuivant(tFin);
+				}
+			}
+
+			// Pour chaque tâche, si elle n'a plus de précédent et ce n'est pas "Fin" ou "Debut", on lui ajoute "Debut"
+			for (Tache t1 : this.taches) {
+				if (t1.getPrecedents().isEmpty() && 
+					!t1.getNom().equals("Fin") && 
+					!t1.getNom().equals("Debut")) {
+					t1.ajouterPrecedent(tDebut);
+				}
+			}
+
+			// Supprimer la tâche elle-même de la liste principale
+			this.taches.remove(t);
+
+
+				// Calculer les dates au plus tôt et au plus tard
+				calculerDates();
+
+				//Creer le(s) chemin(s) critique(s)
+				creerCheminCritique();
+		}
+
+	public void setDure(int val, Tache tache)
+	{
+		this.taches.get(this.taches.indexOf(tache)).setDuree(val);
+		
+		// Calculer les dates au plus tôt et au plus tard
+		this.calculerDates();
+
+		//Creer le(s) chemin(s) critique(s)
+		this.creerCheminCritique();
+	}
 	
-	public boolean enregistrer(String infosNoeuds, String cheminAbsolu) 
+public boolean enregistrer(String infosNoeuds, String cheminAbsolu) 
 	{
 		boolean bRet;
 		try
@@ -177,111 +294,144 @@ public class Mpm
 		return bRet;
 	}
 
-	public ArrayList<Tache> getTaches() {
-		return this.taches;
-	}
+	public ArrayList<Tache> getTaches() {return this.taches;}
 
-	public boolean valeursValides(String nom, String duree, String ant)
+	public boolean valeursValides(String nom, String duree, String ant, String Svt)
 	{
-		boolean bRet = true;
 		this.msgErreur = "";
 
-		if (nom == null || nom.trim().isEmpty() ) 
+		// Vérification du nom
+		if (nom == null || nom.trim().isEmpty()) 
 		{
-			this.msgErreur += "Nom de tâche non saisi\n";
+			this.msgErreur = Erreur.NON_SAISIE.getMessage();
 			return false;
 		}
-
-		// si la tâche existe déjà
-		for (Tache t : this.taches)
+		String nomTrim = nom.trim();
+		if (nomTrim.contains("|") || nomTrim.contains(",")) 
 		{
-			if (t.getNom().equals(nom.trim()))
+			this.msgErreur = Erreur.CHAR_NOM_INVALIDE.getMessage();
+			return false;
+		}
+		for (Tache t : this.taches)
+			if (t.getNom().equals(nomTrim)) 
 			{
-				this.msgErreur += "Une tâche avec ce nom existe déjà\n";
+				this.msgErreur = Erreur.DEJA_EXISTANT.getMessage();
 				return false;
 			}
-		}
 
-		// le nom ne doit pas contenir les delemiteurs | et , dans son nom
-		if (nom.contains("|") || nom.contains(","))
+		// Vérification de la durée
+		if (duree == null || duree.trim().isEmpty()) 
 		{
-			this.msgErreur += "Le nom de tâche ne peut pas contenir les caractères '|' ou ',' \n";
+			this.msgErreur = Erreur.DUREE_INVALIDE.getMessage();
 			return false;
 		}
-
-
-		if (duree == null || duree.trim().isEmpty())
-		{
-			this.msgErreur += "Durée non saisie\n";
-			return false;
-		}
-		
+		int duration;
 		try 
 		{
-			int duration = Integer.parseInt(duree.trim());
-			if (duration <= 0)
+			duration = Integer.parseInt(duree.trim());
+			if (duration <= 0) 
 			{
-				this.msgErreur += "La durée doit être strictement supérieure à 0\n";
+				this.msgErreur = Erreur.DUREE_NEGATIF.getMessage();
 				return false;
 			}
 		} 
 		catch (NumberFormatException e) 
 		{
-			this.msgErreur += "La durée doit être un nombre entier\n";
+			this.msgErreur = Erreur.DUREE_INT.getMessage();
 			return false;
 		}
 
-
-
-		
-		if (bRet && ant != null && !ant.trim().isEmpty()) 
+		// Vérification des antécédents
+		if (ant != null && !ant.trim().isEmpty()) 
 		{
-			String nomTacheActuelle = (nom != null) ? nom.trim() : "";
-			String[] antecedents = ant.trim().split(",");
-
-			for (String unAntecedent : antecedents) 
+			for (String unAntecedent : ant.trim().split(",")) 
 			{
 				unAntecedent = unAntecedent.trim();
-				if (unAntecedent.isEmpty()) continue; // Ignorer les virgules en trop (ex: "A,,B")
 
-				
+				if (unAntecedent.isEmpty()) continue;
+
 				if (unAntecedent.equals("Fin")) 
 				{
-					this.msgErreur += "La tâche 'Fin' ne peut pas être un prédécesseur.\n";
-					return false;
-				}
-				
-				if (unAntecedent.equals("Debut")) 
-				{
-					this.msgErreur += "La tâche 'Debut' ne doit pas être spécifiée comme prédécesseur.\n";
+					this.msgErreur = Erreur.PRECEDENT_FIN.getMessage();
 					return false;
 				}
 
-				if (!nomTacheActuelle.isEmpty() && unAntecedent.equals(nomTacheActuelle)) 
+				if (unAntecedent.equals("Debut")) 
 				{
-					this.msgErreur += "La tâche '" + nomTacheActuelle + "' ne peut pas dépendre d'elle-même.\n";
+					this.msgErreur = Erreur.PRECEDENT_DEBUT.getMessage();
+					return false;
+				}
+				if (unAntecedent.equals(nomTrim)) 
+				{
+					Erreur.TACHE_DEPENDANCE_REFLEXIVE.formater(nomTrim);
 					return false;
 				}
 
 				boolean trouve = false;
-				for (Tache tExistante : this.taches) 
-				{
-					if (tExistante.getNom().equals(unAntecedent)) 
+				for (Tache t : this.taches)
+					if (t.getNom().equals(unAntecedent)) 
 					{
 						trouve = true;
 						break;
 					}
-				}
-				if (!trouve && !unAntecedent.equals("Debut") && !unAntecedent.equals("Fin")) 
+				if (!trouve) 
 				{
-					this.msgErreur += "Le prédécesseur spécifié '" + unAntecedent + "' n'existe pas.\n";
+					this.msgErreur = Erreur.PRECEDENT_NON_EXISTANT.formater(unAntecedent);
 					return false;
 				}
-
 			}
 		}
 
-		return bRet;
+		// Vérification des suivants
+		if (Svt != null && !Svt.trim().isEmpty()) 
+		{
+			for (String unSuivant : Svt.trim().split(",")) 
+			{
+				unSuivant = unSuivant.trim();
+				if (unSuivant.isEmpty()) continue;
+				if (unSuivant.equals("Debut")) 
+				{
+					this.msgErreur = Erreur.SUIVANT_DEBUT.getMessage();
+					return false;
+				}
+				if (unSuivant.equals("Fin")) 
+				{
+					this.msgErreur = Erreur.SUIVANT_FIN.getMessage();
+					return false;
+				}
+				if (unSuivant.equals(nomTrim)) 
+				{
+					this.msgErreur = Erreur.TACHE_DEPENDANCE_REFLEXIVE.formater(nomTrim);
+					return false;
+				}
+				// Vérifier que le suivant n'est pas aussi un antécédent
+				if (ant != null && !ant.trim().isEmpty()) 
+				{
+					for (String unAntecedent : ant.trim().split(",")) 
+					{
+						if (unSuivant.equals(unAntecedent.trim())) 
+						{
+							this.msgErreur = Erreur.SUIVANT_ET_PRECEDENT.formater(unSuivant);
+							return false;
+						}
+					}
+				}
+				boolean trouve = false;
+				for (Tache t : this.taches)
+					if (t.getNom().equals(unSuivant)) 
+					{
+						trouve = true;
+						break;
+					}
+				if (!trouve) 
+				{
+					this.msgErreur = Erreur.SUIVANT_INEXISTANT.formater(unSuivant);
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 
 	public String getErreur()

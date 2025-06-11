@@ -1,4 +1,4 @@
-package exFinal.Metier;
+package Metier;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package exFinal.Metier;
+package Metier;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -28,6 +28,8 @@ public class Tache
 
 	public ArrayList<Tache> getPrecedents() {return this.precedents;}
 	public ArrayList<Tache> getSuivants()   {return this.suivants;}
+	
+	public void setDuree(int duree) {this.duree = duree;}
 
 	// Ajoute une tâche précédente (dépendance)
 	public void ajouterPrecedent(Tache t) 

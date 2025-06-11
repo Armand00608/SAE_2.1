@@ -1,4 +1,4 @@
-package exFinal.Ihm;
+package Ihm;
 
 import exFinal.Controleur;
 import java.awt.event.WindowEvent;

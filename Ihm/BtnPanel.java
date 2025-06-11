@@ -1,4 +1,4 @@
-package exFinal.Ihm;
+package Ihm;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,5 +55,12 @@ public class BtnPanel extends JPanel implements ActionListener {
 
 		if (e.getSource() == this.btnCrt)
 			this.graphe.activerChemin();
+	}
+
+	public void resetBtn() 
+	{
+		this.btnTot.setEnabled(true );
+		this.btnTar.setEnabled(false);
+		this.btnCrt.setEnabled(false);
 	}
 }
