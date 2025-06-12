@@ -20,7 +20,7 @@ public class Controleur
 
 	public void setNouvMetier(String fichier)
 	{
-		this.metier = new Mpm(fichier,"02/06/2025");
+		this.metier = new Mpm(fichier,"01/01/2025");
 		this.ihm.enableBtn();
 		
 		this.majIhm();
@@ -52,10 +52,23 @@ public class Controleur
 		return this.metier.enregistrer(infosNoeuds, cheminAbsolue);
 	}
 
+	    public void setEnDate(){this.ihm.setEnDate();}
+
 	public void setDure(int val, Tache tache)
 	{
 		this.metier.setDure(val, tache);
 		this.majIhm();
+	}
+
+	public void setDateDebut(String dateDebut, String dateFin)
+	{
+		this.metier.setDateDebut(dateDebut, dateFin);
+		this.majIhm();
+	}
+
+	public boolean dateValide(String date)
+	{
+		return this.metier.dateValide(date);
 	}
 
 	public static void main(String[] args)

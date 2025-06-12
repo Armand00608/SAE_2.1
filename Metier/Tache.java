@@ -97,20 +97,41 @@ public class Tache
 	// Vérifie si la tâche est critique (aucune marge)
 	public boolean estCritique() {return this.datePlusTot == this.datePlusTard;}
 
-	public String ajouterJours(String dateDebut, int nbJours)
+	public static String ajouterJours(String dateDebut, int nbJours)
 	{
 		try
 		{
-			SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-			Calendar         cal    = Calendar.getInstance();
-			cal.setTime(format.parse(dateDebut));
+			SimpleDateFormat formatEntree;
+			
+			// Détecter le format d'entrée et ajuster si nécessaire
+			if (dateDebut.matches("\\d{2}/\\d{2}/\\d{4}")) {
+				// Format complet : dd/MM/yyyy
+				formatEntree = new SimpleDateFormat("dd/MM/yyyy");
+			} else if (dateDebut.matches("\\d{2}/\\d{2}")) {
+				// Format court : dd/MM - il faut ajouter une année
+				// On suppose l'année courante ou une année par défaut
+				Calendar currentYear = Calendar.getInstance();
+				dateDebut = dateDebut + "/" + currentYear.get(Calendar.YEAR);
+				formatEntree = new SimpleDateFormat("dd/MM/yyyy");
+			} else {
+				System.err.println("Format de date non reconnu : " + dateDebut);
+				return "??/??";
+			}
+			
+			formatEntree.setLenient(false);
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(formatEntree.parse(dateDebut));
 			cal.add(Calendar.DAY_OF_MONTH, nbJours);
 
 			return new SimpleDateFormat("dd/MM").format(cal.getTime());
 		}
-		catch (ParseException e) {return "??/??";}
+		catch (ParseException e) 
+		{
+			System.err.println("Erreur de parsing pour la date : " + dateDebut);
+			e.printStackTrace();
+			return "??/??";
+		}
 	}
-
 
 	// Retourne une représentation texte de la tâche
 	public String toString(String dateDebut)

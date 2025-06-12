@@ -30,7 +30,7 @@ public class FrameMpm extends JFrame
 		JMenuBar menubMaBarre = new BarreMenu(this.ctrl);
 		this.setJMenuBar( menubMaBarre );
 
-		this.btnPanel = new BtnPanel(this.graphPanel);
+		this.btnPanel = new BtnPanel(this.graphPanel, this.ctrl);
 		this.btnPanel.setVisible(false);
 		this.add(this.btnPanel, BorderLayout.SOUTH);
 
@@ -46,7 +46,7 @@ public class FrameMpm extends JFrame
 		return this.graphPanel.getInfos();
 	}
 
-	
+	public void setEnDate(){this.graphPanel.setEnDate();}
 
 	public MPMGrapheAuto getMpmGraphe() {return this.graphPanel;}
 	public BtnPanel      getBtnPanel () {return this.btnPanel  ;}

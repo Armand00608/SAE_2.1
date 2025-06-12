@@ -33,6 +33,7 @@ import javax.swing.*;
 		private int etapePlusTotMax;
 		private int etapePlusTarMax;
 		private int nbCol;
+		private boolean enDate;
 
 		/**
 		 * Constructeur principal prenant un contrôleur.
@@ -45,6 +46,7 @@ import javax.swing.*;
 			this.etapePlusTarMax = -1;
 			this.etapePlusTotMax =  1;
 			this.ctrl            =  ctrl;
+			this.enDate          = false;
 			this.cheminsCritiques = this.ctrl.getCheminCritiques();
 
 			this.majIhm();
@@ -75,44 +77,19 @@ import javax.swing.*;
 		}
 
 		public void majIhm()
-			{
-				this.cheminsCritiques = this.ctrl.getCheminCritiques();
+		{
+			this.cheminsCritiques = this.ctrl.getCheminCritiques();
 
-				this.initialiserNoeudsArcs();
+			this.initialiserNoeudsArcs();
 
-				this.creerGraphe();
+			this.creerGraphe();
 
 
-				if (this.etapePlusTotMax == this.nbCol )
-					this.etapePlusTotMax = this.nbCol + 1;
+			if (this.etapePlusTotMax == this.nbCol )
+				this.etapePlusTotMax = this.nbCol + 1;
 
-				invalidate();
-				revalidate();
-				repaint();
-
-				Container parent = getParent();
-				if (parent instanceof JViewport) {
-					parent.getParent().revalidate();
-				}
-			}
-
-			public Dimension getPreferredSize() 
-			{
-				int maxX = 100;
-				int maxY = 100;
-
-				for (Noeud n : noeuds) {
-					maxX = Math.max(maxX, n.getX() + boxSize + 50);
-					maxY = Math.max(maxY, n.getY() + boxSize + 50);
-				}
-
-				if (noeuds.isEmpty()) {
-					maxX = 800;
-					maxY = 600;
-				}
-
-				return new Dimension(maxX, maxY);
-			}
+			repaint();
+		}
 
 		/**
 		 * Crée les nœuds et arcs à partir des tâches du contrôleur.
@@ -126,48 +103,32 @@ import javax.swing.*;
 			HashMap<String, Integer> dicTaches = new HashMap<>();
 
 			dicTaches.clear();
-			this.nbCol = 0; // Reset nbCol
 
-			while(dicTaches.size() != taches.size())
+			while(dicTaches.size() != taches.size())//boucle infini
 			{
 				for (Tache t : taches)
 				{
-					// Si la tâche n'est pas encore dans le dictionnaire
-					if (!dicTaches.containsKey(t.getNom()))
-					{
-						int colPlusGrd = -1;
 
-						if (t.getPrecedents().isEmpty())
+					int colPlusGrd = -1;
+
+					if (t.getPrecedents().isEmpty())
+					{
+						dicTaches.put(t.getNom(), 0);
+					}
+					else
+					{
+						for (Tache pred : t.getPrecedents())
 						{
-							dicTaches.put(t.getNom(), 0);
+							
+							String nomTache = pred.getNom();
+							if(dicTaches.containsKey(nomTache) && dicTaches.get(nomTache)+1 > colPlusGrd)
+								colPlusGrd = dicTaches.get(nomTache)+1;
 						}
-						else
+						if(colPlusGrd != -1)
 						{
-							// Vérifier si tous les précédents ont déjà une colonne assignée
-							boolean tousPrecsTraites = true;
-							
-							for (Tache pred : t.getPrecedents())
-							{
-								String nomTache = pred.getNom();
-								if (!dicTaches.containsKey(nomTache))
-								{
-									tousPrecsTraites = false;
-									break;
-								}
-								
-								if (dicTaches.get(nomTache) + 1 > colPlusGrd)
-									colPlusGrd = dicTaches.get(nomTache) + 1;
-							}
-							
-							// Ne l'ajouter que si tous ses précédents sont traités
-							if (tousPrecsTraites && colPlusGrd != -1)
-							{
-								dicTaches.put(t.getNom(), colPlusGrd);
-								// Mettre à jour nbCol avec la colonne maximale
-								if (colPlusGrd > this.nbCol)
-									this.nbCol = colPlusGrd;
-							}
+							dicTaches.put(t.getNom(), colPlusGrd);
 						}
+						 this.nbCol = colPlusGrd;
 					}
 				}
 			}
@@ -206,15 +167,14 @@ import javax.swing.*;
 		private void creerGraphe() 
 		{
 			int startX = 5;
-			int startY = 375;
+			int startY = 375; // <- Ta demande
 			int distX = boxSize + 100;
 			int distY = boxSize;
 
 			// Construction du dictionnaire colonne -> nœuds
 			HashMap<Integer, ArrayList<Noeud>> dicColNoeud = new HashMap<>();
 
-			// Utiliser nbCol+1 pour inclure toutes les colonnes
-			for (int col = 0; col <= nbCol; col++)
+			for (int col = 0; col < nbCol; col++)
 			{
 				ArrayList<Noeud> ListNoeudDsCol = new ArrayList<>();
 				for (Noeud n : noeuds) 
@@ -222,33 +182,30 @@ import javax.swing.*;
 					if (n.getCol() == col)
 						ListNoeudDsCol.add(n);
 				}
-				if (!ListNoeudDsCol.isEmpty()) // Seulement ajouter si la colonne a des nœuds
-					dicColNoeud.put(col, ListNoeudDsCol);	
+				dicColNoeud.put(col,ListNoeudDsCol);	
 			}
 
 			// Calcul des 'lig' pour chaque colonne
 			for (Integer col : dicColNoeud.keySet())
 			{
-				ArrayList<Noeud> lstCol = dicColNoeud.get(col);
-				ArrayList<Noeud> lstNGrpFait = new ArrayList<>();
+				ArrayList<Noeud> lstCol       = dicColNoeud.get(col);
+				ArrayList<Noeud> lstNGrpFait  = new ArrayList<>();
 				
 				if (col == 0)
-				{
-					if (!lstCol.isEmpty())
 						lstCol.get(0).setLig(0);
-				}
 				else
 				{
 					// tri des nœuds de la colonne col
-					ArrayList<Noeud> lstColOrga = triCol(col, dicColNoeud);
+        			ArrayList<Noeud> lstColOrga = triCol(col, dicColNoeud);
 					int cptSup = 0;
 					int cptInf = 0;
 
 					for (Noeud n : lstColOrga)
 					{
-						ArrayList<Noeud> lstNSvtDePre = new ArrayList<>();
+						System.out.println(n.getNom());
+            			ArrayList<Noeud> lstNSvtDePre = new ArrayList<>();
 
-						ArrayList<Noeud> lstNoeudPreActuel = getPrecedents(n);
+						ArrayList<Noeud> lstNoeudPreActuel  = getPrecedents(n);
 
 						for (Noeud nPreActuel : lstNoeudPreActuel)
 							lstNSvtDePre = getNoeudsMemeSvt(nPreActuel, lstNSvtDePre, lstNoeudPreActuel);
@@ -265,9 +222,13 @@ import javax.swing.*;
 							
 						}
 						
+						System.out.println("cptInf : " + cptInf);
+
 						if (!lstNSvtDePre.isEmpty()) 
 						{
 							int milieu = 0;
+
+							 // 4) position de n dans la liste
 							int emplacementN = lstNSvtDePre.indexOf(n);
 							double tailleGrpDeN = lstNSvtDePre.size();
 
@@ -281,17 +242,25 @@ import javax.swing.*;
 									else
 										milieu += getMilieu(getPrecedents(n));
 									lig += milieu;
+									System.out.println("Noeud : " + n.getNom());
+									System.out.println("Lig = " + lig + " = " + milieu +"/2\n");
 								}
 								else
 								{
 									if (emplacementN > Math.ceil(tailleGrpDeN/2))
 									{
+										System.out.println("hihihihihih");
 										lig += getMilieu(getPrecedents(n)) + (((emplacementN+1) - Math.ceil(tailleGrpDeN/2)) + cptSup++);
 									}
 									else
 									{
+										System.out.println("ohohoohohoho");
 										lig += getMilieu(getPrecedents(n)) + (((emplacementN+1) - Math.ceil(tailleGrpDeN/2)) - cptInf--);
 									}
+									System.out.println("Noeud : " + n.getNom());
+									System.out.println("Lig = " + lig + " = " + getMilieu(getPrecedents(n)) + "+ (((" + emplacementN+"+1)" +" - "+ Math.ceil(tailleGrpDeN/2)+") - "+ cptInf-- +")");
+									System.out.println("cptInf : "+ cptInf);
+									System.out.println("cptSup : "+ cptSup  + "\n");
 								}
 							}
 							else
@@ -304,6 +273,8 @@ import javax.swing.*;
 								{
 									lig += getMil(n) + ((emplacementN - (tailleGrpDeN/2)) - --cptInf) ;
 								}
+								System.out.println("Noeud : " + n.getNom());
+								System.out.println("Lig = " + lig + " = " + getMil(n) + " - (" + emplacementN +" - ("+ tailleGrpDeN/2 + "))");
 							}
 
 							lstNGrpFait.add(n);
@@ -574,29 +545,38 @@ import javax.swing.*;
 				int textWidth = fm.stringWidth(n.getNom());
 				g2.drawString(n.getNom(), n.getX() + (boxSize - textWidth) / 2, n.getY() + 20);
 
+				
 			}
 
 			
-				for (Noeud n : this.noeuds) 
+				for (Noeud n : this.noeuds)
 				{
-					
+					Tache tache = ctrl.chercherTacheParNom(n.getNom());
+
+
+					String dtPlusTot = this.enDate ? tache.ajouterJours(ctrl.getDateDebut(), tache.getDatePlusTot())  : n.getTot() + "" ;
+					String dtPlusTar = this.enDate ? tache.ajouterJours(ctrl.getDateDebut(), tache.getDatePlusTard()) :n.getTard() + "" ;
+					int ecartTot     = this.enDate ? 3 : 15;
+					int ecartTar     = this.enDate ? 38 : 25;
+
 					//Affichage au Plus tot
-					if (n.getCol() < this.etapePlusTotMax) 
+					if (n.getCol() < this.etapePlusTotMax)
 					{
 						g2.setColor  (new Color(30, 189, 120));
-						g2.drawString(String.valueOf(n.getTot()), n.getX() + 15, n.getY() + boxSize - 10);
+						g2.drawString(dtPlusTot, n.getX() + ecartTot, n.getY() + boxSize - 10);
 					}
-					
+
 					//Affichage au Plus tard
 					g2.setColor  (Color.RED);
-					if (n.getCol() > this.etapePlusTarMax ) 
+					if (n.getCol() > this.etapePlusTarMax )
 					{
-						g2.drawString(String.valueOf(n.getTard()), n.getX() + boxSize - 25, n.getY() + boxSize - 10);
-						
-					}					
+						g2.drawString(dtPlusTar, n.getX() + boxSize - ecartTar, n.getY() + boxSize - 10);
+
+					}
 				}
-				
+					
 				g2.setColor  (Color.BLACK);
+
 
 		}
 
@@ -634,7 +614,7 @@ import javax.swing.*;
 		{
 			this.etapePlusTarMax = this.nbCol;
 			this.etapePlusTotMax = 1;
-			this.cheminActif = false;
+			this.cheminActif     = false;
 		}
 
 
@@ -706,6 +686,21 @@ import javax.swing.*;
 				sRet += "|" + n.getX() + "," + n.getY() + "\n";
 			}
 			return sRet;
+        }
+
+		public void setEnDate()
+		{
+			if (!this.enDate)
+            {
+                this.enDate = true;
+                this.majIhm();
+            }
+            else
+            {
+                this.enDate = false;
+                this.majIhm();
+            }
+            this.majIhm();
         }
 
 		private class GereSouris extends MouseAdapter

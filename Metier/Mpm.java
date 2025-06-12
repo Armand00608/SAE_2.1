@@ -2,6 +2,7 @@ package Metier;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -321,6 +322,18 @@ public boolean enregistrer(String infosNoeuds, String cheminAbsolu)
 				return false;
 			}
 
+		if (nom.length() > 50) 
+		{
+			this.msgErreur = Erreur.NOM_TROP_LONG.getMessage();
+			return false;
+		}
+
+		if (nom.equals("Debut") || nom.equals("Fin")) 
+		{
+			this.msgErreur = Erreur.NOM_RESERVE.formater(nom);
+			return false;
+		}
+
 		// Vérification de la durée
 		if (duree == null || duree.trim().isEmpty()) 
 		{
@@ -517,9 +530,13 @@ public boolean enregistrer(String infosNoeuds, String cheminAbsolu)
 			//Creer le(s) chemin(s) critique(s)
 			creerCheminCritique();
 		}
-		catch (Exception e)
+		catch (FileNotFoundException e) 
 		{
-			System.out.println("Erreur lecture fichier : " + e.getMessage());
+			this.msgErreur = Erreur.FICHIER_INTROUVABLE.formater(this.nomFichier);
+		}
+		catch (Exception e) 
+		{
+			this.msgErreur = Erreur.LECTURE_FICHIER_ERREUR.formater(e.getMessage());
 		}
 	}
 
@@ -593,6 +610,87 @@ public boolean enregistrer(String infosNoeuds, String cheminAbsolu)
 		}
 		
 		this.taches = tachesTriees;
+	}
+
+	public boolean dateValide(String date) 
+	{
+		if (date == null || date.trim().isEmpty()) 
+		{
+			this.msgErreur = Erreur.DATE_VIDE.getMessage();
+			return false;
+		}
+		
+		
+		if (!date.matches("\\d{2}/\\d{2}/\\d{4}")) 
+		{
+			this.msgErreur = Erreur.DATE_FORMAT_INVALIDE.getMessage();
+			return false;
+		}
+		
+		
+		String[] parties = date.split("/");
+		int jour = Integer.parseInt(parties[0]);
+		int mois = Integer.parseInt(parties[1]);
+		int annee = Integer.parseInt(parties[2]);
+		
+		
+		if (annee < 1900 || annee > 2100) 
+		{
+			this.msgErreur = Erreur.ANNEE_INVALIDE.getMessage();
+        	return false; 
+		}
+		
+		if (mois < 1 || mois > 12) 
+		{
+			this.msgErreur = Erreur.MOIS_INVALIDE.getMessage();
+			return false;
+		}
+		
+		if (jour < 1) 
+		{
+			this.msgErreur = Erreur.JOUR_INVALIDE.formater(jour, mois);
+			return false; 
+		}
+		
+		int[] joursParMois = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+		
+		if (estAnneeBissextile(annee)) 
+		{
+			joursParMois[1] = 29; 
+		}
+		
+		if (jour > joursParMois[mois - 1]) 
+		{
+			this.msgErreur = Erreur.JOUR_INVALIDE.formater(jour, mois);
+        	return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean estAnneeBissextile(int annee) 
+	{
+		return (annee % 4 == 0) && (annee % 100 != 0 || annee % 400 == 0);
+	}
+
+	public void setDateDebut(String dateDebut, String dateFin)
+	{
+
+		if (dateDebut != null && dateDebut.matches("\\d{2}/\\d{2}/\\d{4}")) 
+		{
+			this.dateDebut = dateDebut;
+		}
+		if (dateFin !=null && dateFin.matches("\\d{2}/\\d{2}/\\d{4}")) 
+		{
+			
+			Tache tFin = chercherTacheParNom("Fin");
+			if (tFin != null) 
+			{
+				
+				this.dateDebut = Tache.ajouterJours(dateFin, - tFin.getDatePlusTard());
+			}
+		}
+
 	}
 
 	// Affichage des résultats
